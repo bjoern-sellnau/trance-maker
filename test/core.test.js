@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { midiToFreq, midiToName } from '../js/util.js';
-import { defaultProject, createInstrument, createPattern } from '../js/model.js';
+import { defaultProject, createInstrument, createPattern, createClip, arrangementEndBeats } from '../js/model.js';
 import { encodeWAV, arrayBufferToBase64, base64ToArrayBuffer, audioBufferToBase64Wav } from '../js/audio/wav.js';
 import { serializeProject, deserializeProject } from '../js/project.js';
 
@@ -45,6 +45,24 @@ test('createPattern: leeres Raster korrekter Größe', () => {
   assert.equal(p.cells.length, 8);
   assert.equal(p.cells[0].length, 4);
   assert.equal(p.cells[0][0], null);
+});
+
+test('Arrangement: Defaultprojekt hat Clips, Endberechnung stimmt', () => {
+  const { song } = defaultProject();
+  assert.ok(song.arrangement);
+  assert.ok(song.arrangement.clips.length > 0);
+  // Lead-Clip startet bei Beat 4 mit Länge 4 -> Ende >= 8
+  assert.ok(arrangementEndBeats(song.arrangement) >= 8);
+  const empty = { clips: [] };
+  assert.equal(arrangementEndBeats(empty), 0);
+});
+
+test('createClip: Defaults', () => {
+  const c = createClip({ track: 2, startBeat: 5, inst: 'x' });
+  assert.equal(c.track, 2);
+  assert.equal(c.startBeat, 5);
+  assert.equal(c.lengthBeats, 2);
+  assert.ok(c.id.startsWith('clip'));
 });
 
 // ---- WAV / Base64 ----
@@ -91,6 +109,9 @@ test('serialize -> deserialize erhält Song-Struktur', async () => {
   assert.deepEqual(round.song.order, project.song.order);
   // Instrument-IDs bleiben stabil (Zellen referenzieren sie)
   assert.equal(round.song.patterns[0].cells[0][0].inst, project.song.instruments[0].id);
+  // Arrangement übersteht den Roundtrip
+  assert.equal(round.song.arrangement.clips.length, project.song.arrangement.clips.length);
+  assert.equal(round.song.arrangement.clips[0].inst, project.song.arrangement.clips[0].inst);
 });
 
 test('serialize: Nicht-Sample-Instrumente haben kein sampleData', () => {

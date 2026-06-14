@@ -32,7 +32,10 @@ export function serializeProject(project) {
         id: p.id, name: p.name, rows: p.rows,
         cells: p.cells   // bereits JSON-sicher (null | {midi,inst} | {off:true})
       })),
-      order: song.order.slice()
+      order: song.order.slice(),
+      arrangement: song.arrangement
+        ? { tracks: song.arrangement.tracks, bars: song.arrangement.bars, clips: song.arrangement.clips }
+        : { tracks: 8, bars: 8, clips: [] }
     }
   };
   return JSON.stringify(out);
@@ -51,6 +54,10 @@ export async function deserializeProject(json) {
   song.instruments = song.instruments || [];
   song.patterns = song.patterns || [];
   song.order = song.order || [];
+  if (!song.arrangement) song.arrangement = { tracks: 8, bars: 8, clips: [] };
+  song.arrangement.tracks = song.arrangement.tracks || 8;
+  song.arrangement.bars = song.arrangement.bars || 8;
+  song.arrangement.clips = song.arrangement.clips || [];
 
   for (const inst of song.instruments) {
     if (inst.mute == null) inst.mute = false;

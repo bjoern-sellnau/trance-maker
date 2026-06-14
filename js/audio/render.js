@@ -1,17 +1,28 @@
-// Rendert den kompletten Song offline (schneller als Echtzeit) zu einem AudioBuffer.
+// Rendert den Song offline (schneller als Echtzeit) zu einem AudioBuffer.
+// mode: 'tracker' (Pattern/Order) oder 'arranger' (Music-Maker-Zeitleiste).
 
 import { triggerInstrument } from './instruments.js';
+import { arrangementEndBeats, BEATS_PER_BAR } from '../model.js';
 
-export async function renderSong(app, { sampleRate = 44100, tail = 2.5 } = {}) {
+export async function renderSong(app, { sampleRate = 44100, tail = 2.5, mode } = {}) {
   const song = app.project.song;
-  const spr = 60 / (song.bpm * song.rowsPerBeat);
+  mode = mode || app.viewMode || 'tracker';
 
-  let totalRows = 0;
-  const order = song.order.length ? song.order : song.patterns.map((_, i) => i);
-  for (const oi of order) { const p = song.patterns[oi]; if (p) totalRows += p.rows; }
-  if (totalRows === 0) totalRows = 16;
+  // Gesamtlänge bestimmen
+  let totalSec;
+  if (mode === 'arranger') {
+    const spb = 60 / song.bpm;
+    totalSec = Math.max(arrangementEndBeats(song.arrangement), BEATS_PER_BAR) * spb;
+  } else {
+    const spr = 60 / (song.bpm * song.rowsPerBeat);
+    let totalRows = 0;
+    const order = song.order.length ? song.order : song.patterns.map((_, i) => i);
+    for (const oi of order) { const p = song.patterns[oi]; if (p) totalRows += p.rows; }
+    if (totalRows === 0) totalRows = 16;
+    totalSec = totalRows * spr;
+  }
 
-  const length = Math.ceil(sampleRate * (totalRows * spr + tail));
+  const length = Math.ceil(sampleRate * (totalSec + tail));
   const offline = new OfflineAudioContext(2, length, sampleRate);
 
   // Master-Kette (entspricht der Live-Kette)
@@ -33,28 +44,38 @@ export async function renderSong(app, { sampleRate = 44100, tail = 2.5 } = {}) {
     nodes.set(inst.id, g);
   }
 
-  // Alle Noten einplanen
-  let t = 0;
-  const channelVoice = [];
-  for (const oi of order) {
-    const pat = song.patterns[oi];
-    if (!pat) continue;
-    for (let r = 0; r < pat.rows; r++) {
-      for (let ch = 0; ch < song.channels; ch++) {
-        if (app.mutedChannels.has(ch)) continue;
-        const cell = pat.cells[r][ch];
-        if (!cell) continue;
-        if (cell.off) {
+  if (mode === 'arranger') {
+    const spb = 60 / song.bpm;
+    for (const clip of (song.arrangement.clips || [])) {
+      const inst = app.getInstrument(clip.inst);
+      if (!inst) continue;
+      triggerInstrument(offline, nodes.get(inst.id) || master, inst, clip.midi, clip.startBeat * spb, { duration: clip.lengthBeats * spb });
+    }
+  } else {
+    const spr = 60 / (song.bpm * song.rowsPerBeat);
+    const order = song.order.length ? song.order : song.patterns.map((_, i) => i);
+    let t = 0;
+    const channelVoice = [];
+    for (const oi of order) {
+      const pat = song.patterns[oi];
+      if (!pat) continue;
+      for (let r = 0; r < pat.rows; r++) {
+        for (let ch = 0; ch < song.channels; ch++) {
+          if (app.mutedChannels.has(ch)) continue;
+          const cell = pat.cells[r][ch];
+          if (!cell) continue;
+          if (cell.off) {
+            if (channelVoice[ch]) channelVoice[ch].stop(t);
+            channelVoice[ch] = null;
+            continue;
+          }
+          const inst = app.getInstrument(cell.inst);
+          if (!inst) continue;
           if (channelVoice[ch]) channelVoice[ch].stop(t);
-          channelVoice[ch] = null;
-          continue;
+          channelVoice[ch] = triggerInstrument(offline, nodes.get(inst.id) || master, inst, cell.midi, t, {});
         }
-        const inst = app.getInstrument(cell.inst);
-        if (!inst) continue;
-        if (channelVoice[ch]) channelVoice[ch].stop(t);
-        channelVoice[ch] = triggerInstrument(offline, nodes.get(inst.id) || master, inst, cell.midi, t, {});
+        t += spr;
       }
-      t += spr;
     }
   }
 

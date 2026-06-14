@@ -3,11 +3,13 @@
 
 import { getCtx, getMaster, ensureRunning } from './audio/context.js';
 import { triggerInstrument } from './audio/instruments.js';
+import { arrangementEndBeats, BEATS_PER_BAR } from './model.js';
 
 export class Sequencer {
   constructor(app) {
     this.app = app;
     this.playing = false;
+    this.mode = 'tracker';       // 'tracker' | 'arranger'
     this.followSong = false;
     this.orderIdx = 0;
     this.row = 0;
@@ -19,8 +21,17 @@ export class Sequencer {
     this._queue = [];            // {time, patternIndex, row}
     this._channelVoice = [];     // pro Kanal letzte Stimme (für mono-Cut)
     this.instNodes = new Map();  // instId -> GainNode (Mixer)
-    this.onStep = null;          // (patternIndex, row) => void  (UI-Playhead)
+    this.onStep = null;          // (patternIndex, row) => void  (Tracker-Playhead)
+    this.onArrPos = null;        // (beat) => void  (Arranger-Playhead)
     this.onStop = null;
+    // Arranger-Zustand
+    this._arrEvents = [];
+    this._arrVoices = [];
+    this._arrIdx = 0;
+    this._arrOrigin = 0;
+    this._arrLoopStart = 0;
+    this._arrLenBeats = 4;
+    this._spb = 0.5;
   }
 
   get song() { return this.app.project.song; }
@@ -69,17 +80,28 @@ export class Sequencer {
   }
 
   // ---------- Transport ----------
-  async play(followSong) {
+  async play(mode, followSong) {
     if (this.playing) return;
     await ensureRunning();
     this.ensureInstNodes();
-    this.followSong = !!followSong;
+    this.mode = mode === 'arranger' ? 'arranger' : 'tracker';
     this.playing = true;
-    this.orderIdx = followSong ? 0 : this.app.currentPatternIndex;
-    this.row = 0;
-    this._channelVoice = [];
     this._queue = [];
-    this.nextRowTime = getCtx().currentTime + 0.08;
+    const ctx = getCtx();
+    if (this.mode === 'arranger') {
+      this._spb = 60 / this.song.bpm;
+      this._buildArrEvents();
+      this._arrIdx = 0;
+      this._arrVoices = [];
+      this._arrOrigin = ctx.currentTime + 0.08;
+      this._arrLoopStart = this._arrOrigin;
+    } else {
+      this.followSong = !!followSong;
+      this.orderIdx = followSong ? 0 : this.app.currentPatternIndex;
+      this.row = 0;
+      this._channelVoice = [];
+      this.nextRowTime = ctx.currentTime + 0.08;
+    }
     this._timer = setInterval(() => this._scheduler(), this.lookaheadMs);
     this._drawPlayhead();
   }
@@ -91,9 +113,12 @@ export class Sequencer {
     const ctx = getCtx();
     // alle klingenden Stimmen weich beenden
     for (const v of this._channelVoice) { if (v) try { v.stop(ctx.currentTime); } catch (_) {} }
+    for (const v of this._arrVoices) { if (v) try { v.stop(ctx.currentTime); } catch (_) {} }
     this._channelVoice = [];
+    this._arrVoices = [];
     this._queue = [];
     if (this.onStep) this.onStep(this._activePatternIndex(), -1);
+    if (this.onArrPos) this.onArrPos(-1);
     if (this.onStop) this.onStop();
   }
 
@@ -111,10 +136,44 @@ export class Sequencer {
   }
 
   _scheduler() {
+    if (this.mode === 'arranger') return this._schedulerArr();
     const ctx = getCtx();
     while (this.nextRowTime < ctx.currentTime + this.scheduleAhead) {
       this._scheduleRow(this.nextRowTime);
       this._advance();
+    }
+  }
+
+  // ---------- Arranger (Music-Maker-Zeitleiste) ----------
+  _buildArrEvents() {
+    const arr = this.song.arrangement || { clips: [] };
+    this._arrEvents = (arr.clips || []).slice()
+      .sort((a, b) => a.startBeat - b.startBeat)
+      .map((c) => ({ beat: c.startBeat, durBeats: c.lengthBeats, inst: c.inst, midi: c.midi }));
+    this._arrLenBeats = Math.max(arrangementEndBeats(arr), BEATS_PER_BAR);
+  }
+
+  _schedulerArr() {
+    const ctx = getCtx();
+    const horizon = ctx.currentTime + this.scheduleAhead;
+    const spb = this._spb;
+    const loopLenSec = this._arrLenBeats * spb;
+    for (;;) {
+      if (this._arrIdx >= this._arrEvents.length) {
+        const nextLoopStart = this._arrLoopStart + loopLenSec;
+        if (nextLoopStart < horizon) { this._arrLoopStart = nextLoopStart; this._arrIdx = 0; continue; }
+        break;
+      }
+      const ev = this._arrEvents[this._arrIdx];
+      const evTime = this._arrLoopStart + ev.beat * spb;
+      if (evTime < horizon) {
+        const inst = this.app.getInstrument(ev.inst);
+        if (inst) {
+          const handle = triggerInstrument(ctx, this._targetFor(inst.id), inst, ev.midi, evTime, { duration: ev.durBeats * spb });
+          this._arrVoices.push(handle);
+        }
+        this._arrIdx++;
+      } else break;
     }
   }
 
@@ -160,11 +219,17 @@ export class Sequencer {
     const tick = () => {
       if (!this.playing) return;
       const now = ctx.currentTime;
-      let last = null;
-      while (this._queue.length && this._queue[0].time <= now) {
-        last = this._queue.shift();
+      if (this.mode === 'arranger') {
+        const pos = (now - this._arrOrigin) / this._spb;
+        const beat = ((pos % this._arrLenBeats) + this._arrLenBeats) % this._arrLenBeats;
+        if (this.onArrPos) this.onArrPos(beat);
+        // beendete Stimmen aufräumen
+        if (this._arrVoices.length > 64) this._arrVoices = this._arrVoices.filter((v) => v.endTime > now);
+      } else {
+        let last = null;
+        while (this._queue.length && this._queue[0].time <= now) last = this._queue.shift();
+        if (last && this.onStep) this.onStep(last.patternIndex, last.row);
       }
-      if (last && this.onStep) this.onStep(last.patternIndex, last.row);
       this._raf = requestAnimationFrame(tick);
     };
     this._raf = requestAnimationFrame(tick);
