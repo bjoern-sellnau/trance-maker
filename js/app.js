@@ -8,7 +8,7 @@ import { TrackerUI } from './ui/tracker.js';
 import { SampleMakerUI } from './ui/samplemaker.js';
 import { ArrangerUI } from './ui/arranger.js';
 import { getAnalyser, ensureRunning } from './audio/context.js';
-import { saveProjectToFile, openProjectFromFile, exportSongWav } from './project.js';
+import { saveProjectToFile, openProjectFromFile, exportSongWav, decodeAudioFile } from './project.js';
 
 const letter = (i) => String.fromCharCode(65 + i);
 
@@ -16,7 +16,7 @@ export class App {
   constructor() {
     this.project = defaultProject();
     this.currentPatternIndex = 0;
-    this.viewMode = 'tracker';        // 'tracker' | 'arranger'
+    this.viewMode = 'arranger';       // 'tracker' | 'arranger' (Arranger ist Standard)
     this.mutedChannels = new Set();
     this.octave = 4;
     this.selectedInstrumentId = this.project.song.instruments[0]?.id || null;
@@ -58,6 +58,7 @@ export class App {
     this.bindProjectButtons();
     this.bindTabs();
     this.bindViewSwitch();
+    this.bindFileDrop();
     this.sampleMaker.setMode('synth');
     this.renderAll();
     this.startVU();
@@ -73,7 +74,43 @@ export class App {
       if (e.code === 'Space' && !inField) { e.preventDefault(); this.togglePlay(); }
     });
 
-    $('#tracker').focus();
+    this.applyView();
+  }
+
+  // ---------- Audio-Dateien per Drag & Drop importieren ----------
+  bindFileDrop() {
+    const overlay = $('#dropOverlay');
+    let depth = 0;
+    const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+    window.addEventListener('dragenter', (e) => { if (hasFiles(e)) { depth++; overlay.classList.add('show'); } });
+    window.addEventListener('dragover', (e) => { if (hasFiles(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } });
+    window.addEventListener('dragleave', (e) => { if (hasFiles(e)) { depth = Math.max(0, depth - 1); if (depth === 0) overlay.classList.remove('show'); } });
+    window.addEventListener('drop', (e) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      depth = 0; overlay.classList.remove('show');
+      this.importAudioFiles(e.dataTransfer.files);
+    });
+  }
+
+  async importAudioFiles(files) {
+    const list = Array.from(files).filter((f) => f.type.startsWith('audio/') || /\.(wav|mp3|ogg|m4a|aac|flac|webm)$/i.test(f.name));
+    if (!list.length) { this.setStatus('Keine Audiodateien erkannt.'); return; }
+    this.setStatus('Importiere ' + list.length + ' Sample(s)…');
+    let added = 0, lastId = null;
+    for (const f of list) {
+      try {
+        const buf = await decodeAudioFile(await f.arrayBuffer());
+        const inst = createInstrument({ type: 'sample', name: f.name.replace(/\.[^.]+$/, ''), baseNote: 60, gain: 0.95 });
+        inst.buffer = buf;
+        this.addInstrument(inst);
+        lastId = inst.id; added++;
+      } catch (err) {
+        console.warn('Import fehlgeschlagen:', f.name, err);
+      }
+    }
+    if (lastId) this.selectInstrument(lastId);
+    this.setStatus(added ? (added + ' Sample(s) importiert – jetzt in eine Arranger-Spur ziehen oder klicken.') : 'Import fehlgeschlagen.');
   }
 
   // ---------- Transport ----------
@@ -172,6 +209,12 @@ export class App {
     if (view === this.viewMode) return;
     if (this.seq.playing) this.stop();
     this.viewMode = view;
+    this.applyView();
+    this.setStatus(view === 'arranger' ? 'Arranger-Ansicht (Music-Maker-Stil).' : 'Tracker-Ansicht.');
+  }
+
+  applyView() {
+    const view = this.viewMode;
     $('#viewSwitch').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
     $('#trackerView').classList.toggle('hidden', view !== 'tracker');
     $('#arrangerView').classList.toggle('hidden', view !== 'arranger');
@@ -179,7 +222,6 @@ export class App {
     $('#arrangerControls').classList.toggle('hidden', view !== 'arranger');
     if (view === 'arranger') { this.arranger.render(); $('#arranger').focus(); }
     else { this.tracker.render(); $('#tracker').focus(); }
-    this.setStatus(view === 'arranger' ? 'Arranger-Ansicht (Music-Maker-Stil).' : 'Tracker-Ansicht.');
   }
 
   renderArrangerControls() {
@@ -244,7 +286,15 @@ export class App {
     this.song.instruments.forEach((inst, i) => {
       const item = el('li', {
         class: 'inst-item' + (inst.id === this.selectedInstrumentId ? ' active' : ''),
-        onclick: () => { this.selectInstrument(inst.id); this.seq.preview(inst, inst.type === 'drum' ? 60 : 60, 0.5); }
+        draggable: 'true',
+        title: 'In eine Arranger-Spur ziehen, um einen Block anzulegen',
+        ondragstart: (e) => {
+          e.dataTransfer.setData('application/x-trance-inst', inst.id);
+          e.dataTransfer.setData('text/plain', inst.name);
+          e.dataTransfer.effectAllowed = 'copy';
+          this.selectInstrument(inst.id);
+        },
+        onclick: () => { this.selectInstrument(inst.id); this.seq.preview(inst, 60, 0.5); }
       }, [
         el('span', { class: 'inst-num', text: String(i + 1).padStart(2, '0') }),
         el('span', { class: 'inst-swatch', style: `background:${colorForIndex(i)}` }),

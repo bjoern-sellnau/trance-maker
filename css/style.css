@@ -207,10 +207,25 @@ kbd { background: var(--bg3); border: 1px solid var(--line); border-radius: 4px;
 .arr-clip:active { cursor: grabbing; }
 .arr-clip.selected { box-shadow: 0 0 0 2px var(--text), inset 0 0 0 1px rgba(0,0,0,.35); z-index: 2; }
 .arr-clip-label { padding: 0 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-.arr-clip-del { position: absolute; top: 0; right: 3px; font-size: 10px; opacity: .55; cursor: pointer; }
-.arr-clip-del:hover { opacity: 1; }
+.arr-clip-del {
+  position: absolute; top: 3px; right: 3px; z-index: 3;
+  width: 19px; height: 19px; line-height: 18px; text-align: center;
+  font-size: 13px; border-radius: 50%;
+  background: rgba(0,0,0,.4); color: #fff; opacity: .85; cursor: pointer;
+}
+.arr-clip-del:hover { background: var(--hot); color: #1a0307; opacity: 1; transform: scale(1.12); }
 .arr-clip-resize { position: absolute; top: 0; right: 0; width: 9px; height: 100%; cursor: ew-resize; }
+.arr-bg.drag-over { outline: 2px dashed var(--accent); outline-offset: -2px; }
 .arr-playhead { position: absolute; width: 2px; background: var(--accent); box-shadow: 0 0 6px var(--accent); pointer-events: none; z-index: 6; }
+
+/* Drag & Drop von Audiodateien */
+.drop-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(8,10,14,.8); z-index: 50; pointer-events: none; }
+.drop-overlay.show { display: flex; }
+.drop-inner { border: 2px dashed var(--accent); border-radius: 14px; padding: 38px 56px; font-size: 19px; color: var(--text); background: rgba(20,24,30,.92); box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+
+/* Instrumente sind in den Arranger ziehbar */
+.inst-item { cursor: grab; }
+.inst-item:active { cursor: grabbing; }
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
