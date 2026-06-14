@@ -35,18 +35,35 @@
   </header>
 
   <main class="layout">
-    <section class="panel tracker-panel">
+    <section class="panel main-panel">
       <div class="panel-head">
-        <h2>Tracker</h2>
+        <div class="view-switch" id="viewSwitch">
+          <button data-view="tracker" class="active">Tracker</button>
+          <button data-view="arranger">Arranger</button>
+        </div>
         <div class="pattern-controls" id="patternControls"></div>
+        <div class="pattern-controls hidden" id="arrangerControls"></div>
       </div>
-      <div class="tracker-wrap">
-        <div id="tracker" class="tracker" tabindex="0" aria-label="Tracker-Pattern"></div>
+
+      <div id="trackerView" class="view">
+        <div class="tracker-wrap">
+          <div id="tracker" class="tracker" tabindex="0" aria-label="Tracker-Pattern"></div>
+        </div>
+        <div class="tracker-help">
+          Tastatur: <kbd>Z S X D C…</kbd> &amp; <kbd>Q 2 W 3 E…</kbd> = Noten &nbsp;·&nbsp;
+          <kbd>1</kbd>=Note-Aus &nbsp;·&nbsp; <kbd>Entf</kbd>=löschen &nbsp;·&nbsp;
+          <kbd>↑↓←→</kbd>=Cursor &nbsp;·&nbsp; <kbd>+/-</kbd>=Oktave (<span id="octLabel">4</span>)
+        </div>
       </div>
-      <div class="tracker-help">
-        Tastatur: <kbd>Z S X D C…</kbd> &amp; <kbd>Q 2 W 3 E…</kbd> = Noten &nbsp;·&nbsp;
-        <kbd>1</kbd>=Note-Aus &nbsp;·&nbsp; <kbd>Entf</kbd>=löschen &nbsp;·&nbsp;
-        <kbd>↑↓←→</kbd>=Cursor &nbsp;·&nbsp; <kbd>+/-</kbd>=Oktave (<span id="octLabel">4</span>)
+
+      <div id="arrangerView" class="view hidden">
+        <div class="arranger-wrap">
+          <div id="arranger" aria-label="Arranger-Zeitleiste"></div>
+        </div>
+        <div class="tracker-help">
+          Arranger (wie Music Maker): Instrument links wählen, in eine Spur klicken = Block setzen &nbsp;·&nbsp;
+          ziehen = verschieben &nbsp;·&nbsp; rechte Kante ziehen = Länge &nbsp;·&nbsp; <kbd>✕</kbd>/<kbd>Entf</kbd> = löschen
+        </div>
       </div>
     </section>
 

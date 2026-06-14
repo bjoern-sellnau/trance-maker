@@ -50,8 +50,26 @@ export function createSong() {
     channels: 8,
     instruments: [],
     patterns: [],
-    order: []
+    order: [],
+    // Music-Maker-artiger Arranger: Sample-Bloecke auf Spuren/Zeitleiste
+    arrangement: { tracks: 8, bars: 8, clips: [] }
   };
+}
+
+/** Ein Clip/Block im Arranger. */
+export function createClip(opts = {}) {
+  return Object.assign({
+    id: uid('clip'), track: 0, startBeat: 0, lengthBeats: 2, inst: null, midi: 60
+  }, opts);
+}
+
+export const BEATS_PER_BAR = 4;
+
+/** Ende des letzten Clips in Beats (fuer Loop-/Export-Laenge). */
+export function arrangementEndBeats(arr) {
+  let end = 0;
+  for (const c of (arr?.clips || [])) end = Math.max(end, c.startBeat + c.lengthBeats);
+  return end;
 }
 
 const setCell = (pat, row, ch, midi, instId) => { pat.cells[row][ch] = { midi, inst: instId }; };
@@ -108,6 +126,15 @@ export function defaultProject() {
 
   song.patterns = [A, B];
   song.order = [0, 0, 1, 1];
+
+  // ----- Arranger-Demo (Music-Maker-Ansicht) -----
+  const clips = [];
+  [0, 1, 2, 3, 4, 5, 6, 7].forEach((b) => clips.push(createClip({ track: 0, startBeat: b, lengthBeats: 1, inst: kick.id, midi: 60 })));
+  [1, 3, 5, 7].forEach((b) => clips.push(createClip({ track: 1, startBeat: b, lengthBeats: 1, inst: clap.id, midi: 60 })));
+  [[0, 33], [1, 33], [2, 36], [3, 33], [4, 40], [5, 33], [6, 36], [7, 31]]
+    .forEach(([b, m]) => clips.push(createClip({ track: 2, startBeat: b, lengthBeats: 1, inst: bass.id, midi: m })));
+  [[0, 69], [4, 72]].forEach(([b, m]) => clips.push(createClip({ track: 3, startBeat: b, lengthBeats: 4, inst: lead.id, midi: m })));
+  song.arrangement = { tracks: 8, bars: 8, clips };
 
   return { version: 1, song };
 }

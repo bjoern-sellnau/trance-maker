@@ -6,6 +6,7 @@ import { Sequencer } from './sequencer.js';
 import { MicRecorder } from './audio/recorder.js';
 import { TrackerUI } from './ui/tracker.js';
 import { SampleMakerUI } from './ui/samplemaker.js';
+import { ArrangerUI } from './ui/arranger.js';
 import { getAnalyser, ensureRunning } from './audio/context.js';
 import { saveProjectToFile, openProjectFromFile, exportSongWav } from './project.js';
 
@@ -15,6 +16,7 @@ export class App {
   constructor() {
     this.project = defaultProject();
     this.currentPatternIndex = 0;
+    this.viewMode = 'tracker';        // 'tracker' | 'arranger'
     this.mutedChannels = new Set();
     this.octave = 4;
     this.selectedInstrumentId = this.project.song.instruments[0]?.id || null;
@@ -35,6 +37,8 @@ export class App {
       bodyEl: $('#smBody'), canvas: $('#waveCanvas'), subtabsEl: $('#smSubtabs'),
       btnPreview: $('#btnPreview'), btnAdd: $('#btnAddInst')
     });
+    this.arranger = new ArrangerUI(this, $('#arranger'));
+    this.seq.onArrPos = (beat) => this.arranger.setPlayhead(beat);
 
     this.seq.onStep = (patternIndex, row) => {
       if (this.seq.playing && this.seq.followSong && patternIndex !== this.currentPatternIndex) {
@@ -53,6 +57,7 @@ export class App {
     this.bindTransport();
     this.bindProjectButtons();
     this.bindTabs();
+    this.bindViewSwitch();
     this.sampleMaker.setMode('synth');
     this.renderAll();
     this.startVU();
@@ -83,9 +88,10 @@ export class App {
 
   async togglePlay() {
     if (this.seq.playing) { this.stop(); return; }
-    await this.seq.play($('#chkSong').checked);
+    await this.seq.play(this.viewMode, $('#chkSong').checked);
     $('#btnPlay').classList.add('active');
-    this.setStatus($('#chkSong').checked ? 'Spiele Song…' : 'Spiele Pattern ' + letter(this.currentPatternIndex) + '…');
+    if (this.viewMode === 'arranger') this.setStatus('Spiele Arranger…');
+    else this.setStatus($('#chkSong').checked ? 'Spiele Song…' : 'Spiele Pattern ' + letter(this.currentPatternIndex) + '…');
   }
 
   stop() {
@@ -137,6 +143,7 @@ export class App {
     this.seq.instNodes.forEach((n) => n.disconnect());
     this.seq.instNodes.clear();
     this.seq.ensureInstNodes();
+    if (this.arranger) this.arranger.selectedId = null;
     this.renderAll();
   }
 
@@ -149,6 +156,41 @@ export class App {
         if (tab.dataset.tab === 'mixer') this.renderMixer();
       });
     });
+  }
+
+  // ---------- Ansicht: Tracker / Arranger ----------
+  bindViewSwitch() {
+    $('#viewSwitch').querySelectorAll('button').forEach((b) => {
+      b.addEventListener('click', () => this.setView(b.dataset.view));
+    });
+  }
+
+  setView(view) {
+    if (view === this.viewMode) return;
+    if (this.seq.playing) this.stop();
+    this.viewMode = view;
+    $('#viewSwitch').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
+    $('#trackerView').classList.toggle('hidden', view !== 'tracker');
+    $('#arrangerView').classList.toggle('hidden', view !== 'arranger');
+    $('#patternControls').classList.toggle('hidden', view !== 'tracker');
+    $('#arrangerControls').classList.toggle('hidden', view !== 'arranger');
+    if (view === 'arranger') { this.arranger.render(); $('#arranger').focus(); }
+    else { this.tracker.render(); $('#tracker').focus(); }
+    this.setStatus(view === 'arranger' ? 'Arranger-Ansicht (Music-Maker-Stil).' : 'Tracker-Ansicht.');
+  }
+
+  renderArrangerControls() {
+    const c = $('#arrangerControls');
+    c.innerHTML = '';
+    const arr = this.song.arrangement;
+    const bars = el('input', { type: 'number', min: 1, max: 64, step: 1, value: arr.bars, style: 'width:58px' });
+    bars.addEventListener('change', () => { arr.bars = clamp(parseInt(bars.value) || 8, 1, 64); this.arranger.render(); });
+    c.appendChild(el('label', { class: 'muted', style: 'display:flex;gap:4px;align-items:center' }, ['Takte', bars]));
+    const tracks = el('input', { type: 'number', min: 1, max: 16, step: 1, value: arr.tracks, style: 'width:54px' });
+    tracks.addEventListener('change', () => { arr.tracks = clamp(parseInt(tracks.value) || 8, 1, 16); this.arranger.render(); });
+    c.appendChild(el('label', { class: 'muted', style: 'display:flex;gap:4px;align-items:center' }, ['Spuren', tracks]));
+    c.appendChild(el('button', { class: 'pc-btn', text: 'Leeren', title: 'Alle Blöcke entfernen',
+      onclick: () => { if (confirm('Arranger leeren?')) { arr.clips = []; this.arranger.render(); } } }));
   }
 
   // ---------- Instrumente ----------
@@ -183,6 +225,10 @@ export class App {
           if (cell && cell.inst === id) pat.cells[r][c] = null;
         }
       }
+    }
+    // Arranger-Blöcke dieses Instruments entfernen
+    if (this.song.arrangement && this.song.arrangement.clips) {
+      this.song.arrangement.clips = this.song.arrangement.clips.filter((c) => c.inst !== id);
     }
     if (this.selectedInstrumentId === id) this.selectedInstrumentId = this.song.instruments[0]?.id || null;
     this.seq.ensureInstNodes();
@@ -321,6 +367,8 @@ export class App {
     this.renderInstrumentList();
     this.renderMixer();
     this.renderPatternControls();
+    this.renderArrangerControls();
+    this.arranger.render();
   }
 
   // ---------- VU-Meter ----------

@@ -1,9 +1,10 @@
 # 🎛️ Trance Maker
 
 Ein browserbasierter **Track- und Sample-Maker** im Geist von *Data Becker Techno Maker*
-und *Magix Music Maker* – mit **Tracker-Interface**, eingebautem **Sample-Maker**
-(Synthese, Drum-Synthese, **Mikrofon-Aufnahme**, Datei-Import) sowie **Import/Export**
-ganzer Tracks. Läuft komplett lokal im Browser über die Web Audio API – keine Cloud,
+und *Magix Music Maker* – mit **Tracker-Interface** und **Arranger-Ansicht im
+Music-Maker-Stil**, eingebautem **Sample-Maker** (Synthese, Drum-Synthese,
+**Mikrofon-Aufnahme**, Datei-Import) sowie **Import/Export** ganzer Tracks.
+Läuft komplett lokal im Browser über die Web Audio API – keine Cloud,
 keine Installation von Abhängigkeiten.
 
 ![Web Audio](https://img.shields.io/badge/Web%20Audio%20API-native-34d399)
@@ -58,6 +59,20 @@ Das zentrale Kompositions-Raster wie in klassischen Trackern (FastTracker/ProTra
 schnellen Beat-Klicken), Klick auf eine belegte Zelle löscht sie. Klick auf einen
 Kanal-Kopf (`CH1` …) schaltet den Kanal stumm.
 
+### 🎚️ Arranger (Music-Maker-Ansicht)
+Über den Umschalter **Tracker / Arranger** oben links wechselst du in die klassische
+loop-/blockbasierte Ansicht wie bei Magix Music Maker:
+
+- **Spuren (Lanes) auf einer Zeitleiste**; Takte und Spurenanzahl frei einstellbar.
+- Instrument links auswählen, dann **in eine Spur klicken = Sample-Block setzen**.
+- Blöcke per **Drag verschieben**, an der **rechten Kante in der Länge ziehen**,
+  mit **✕** oder **Entf** löschen; **Leeren**-Button räumt alles ab.
+- Eigener **Playhead**; die Wiedergabe loopt die Arrangement-Länge.
+
+Transport (▶/Leertaste) und **WAV-Export** beziehen sich immer auf die **gerade aktive
+Ansicht** – du kannst also Tracker *oder* Arranger abspielen und exportieren. Beide
+teilen sich dieselbe Instrument-/Sample-Bibliothek.
+
 ### 🔊 Sample Maker
 Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 
@@ -105,6 +120,7 @@ trance-maker/
 │   │   └── wav.js        # WAV-Kodierung + Base64
 │   └── ui/
 │       ├── tracker.js    # Tracker-Raster + Tastatur/Maus
+│       ├── arranger.js   # Arranger-Zeitleiste (Music-Maker-Ansicht)
 │       └── samplemaker.js# Sample-Maker-Oberfläche + Wellenform
 └── test/core.test.js     # Unit-Tests (WAV, Base64, Modell, Serialisierung)
 ```
