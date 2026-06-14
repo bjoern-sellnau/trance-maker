@@ -38,14 +38,14 @@
     <section class="panel main-panel">
       <div class="panel-head">
         <div class="view-switch" id="viewSwitch">
-          <button data-view="tracker" class="active">Tracker</button>
-          <button data-view="arranger">Arranger</button>
+          <button data-view="tracker">Tracker</button>
+          <button data-view="arranger" class="active">Arranger</button>
         </div>
-        <div class="pattern-controls" id="patternControls"></div>
-        <div class="pattern-controls hidden" id="arrangerControls"></div>
+        <div class="pattern-controls hidden" id="patternControls"></div>
+        <div class="pattern-controls" id="arrangerControls"></div>
       </div>
 
-      <div id="trackerView" class="view">
+      <div id="trackerView" class="view hidden">
         <div class="tracker-wrap">
           <div id="tracker" class="tracker" tabindex="0" aria-label="Tracker-Pattern"></div>
         </div>
@@ -56,7 +56,7 @@
         </div>
       </div>
 
-      <div id="arrangerView" class="view hidden">
+      <div id="arrangerView" class="view">
         <div class="arranger-wrap">
           <div id="arranger" aria-label="Arranger-Zeitleiste"></div>
         </div>
@@ -110,6 +110,10 @@
     <span class="spacer"></span>
     <span class="hint">Web Audio API · läuft komplett lokal im Browser</span>
   </footer>
+
+  <div id="dropOverlay" class="drop-overlay">
+    <div class="drop-inner">🎵 Audiodatei(en) hier ablegen — werden als Samples importiert</div>
+  </div>
 
   <script type="module" src="js/main.js"></script>
 </body>

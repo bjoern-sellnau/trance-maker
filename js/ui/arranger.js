@@ -73,6 +73,19 @@ export class ArrangerUI {
       const track = clamp(Math.floor(e.offsetY / this.laneHeight), 0, tracks - 1);
       this.placeClip(track, beat);
     });
+    // Instrument aus der Liste hierher ziehen = Block anlegen
+    const hasInst = (e) => Array.from(e.dataTransfer.types || []).includes('application/x-trance-inst');
+    bg.addEventListener('dragover', (e) => { if (hasInst(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; bg.classList.add('drag-over'); } });
+    bg.addEventListener('dragleave', () => bg.classList.remove('drag-over'));
+    bg.addEventListener('drop', (e) => {
+      if (!hasInst(e)) return;
+      e.preventDefault(); e.stopPropagation();
+      bg.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('application/x-trance-inst');
+      const beat = Math.floor(e.offsetX / this.beatWidth);
+      const track = clamp(Math.floor(e.offsetY / this.laneHeight), 0, tracks - 1);
+      this.placeClipFor(id, track, beat);
+    });
     grid.appendChild(bg);
 
     // Clip-Ebene (über dem Raster, aber für Klicks durchlässig außer auf Clips)
@@ -126,6 +139,12 @@ export class ArrangerUI {
   placeClip(track, beat) {
     const inst = this.app.selectedInstrument;
     if (!inst) { this.app.setStatus('Erst ein Instrument wählen.'); return; }
+    this.placeClipFor(inst.id, track, beat);
+  }
+
+  placeClipFor(instId, track, beat) {
+    const inst = this.app.getInstrument(instId);
+    if (!inst) return;
     let lengthBeats = 2;
     if (inst.type === 'sample' && inst.buffer) lengthBeats = Math.max(1, Math.round(inst.buffer.duration / this.spb));
     else if (inst.type === 'drum') lengthBeats = 1;
@@ -135,6 +154,7 @@ export class ArrangerUI {
     const clip = createClip({ track, startBeat: Math.max(0, beat), lengthBeats, inst: inst.id, midi });
     this.arr.clips.push(clip);
     this.selectedId = clip.id;
+    this.app.selectInstrument(inst.id);
     this.app.seq.preview(inst, midi, Math.min(2, lengthBeats * this.spb));
     this.render();
   }

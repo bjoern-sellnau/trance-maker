@@ -59,12 +59,13 @@ Das zentrale Kompositions-Raster wie in klassischen Trackern (FastTracker/ProTra
 schnellen Beat-Klicken), Klick auf eine belegte Zelle löscht sie. Klick auf einen
 Kanal-Kopf (`CH1` …) schaltet den Kanal stumm.
 
-### 🎚️ Arranger (Music-Maker-Ansicht)
-Über den Umschalter **Tracker / Arranger** oben links wechselst du in die klassische
-loop-/blockbasierte Ansicht wie bei Magix Music Maker:
+### 🎚️ Arranger (Music-Maker-Ansicht) — Standardansicht
+Die loop-/blockbasierte Ansicht wie bei Magix Music Maker ist die **Startansicht**;
+über den Umschalter **Tracker / Arranger** oben links wechselst du jederzeit:
 
 - **Spuren (Lanes) auf einer Zeitleiste**; Takte und Spurenanzahl frei einstellbar.
-- Instrument links auswählen, dann **in eine Spur klicken = Sample-Block setzen**.
+- Instrument links auswählen, dann **in eine Spur klicken = Sample-Block setzen** –
+  oder ein **Instrument aus der Liste direkt in eine Spur ziehen** (Drag & Drop).
 - Blöcke per **Drag verschieben**, an der **rechten Kante in der Länge ziehen**,
   mit **✕** oder **Entf** löschen; **Leeren**-Button räumt alles ab.
 - Eigener **Playhead**; die Wiedergabe loopt die Arrangement-Länge.
@@ -81,6 +82,8 @@ Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 - **Drum** – Synthese von **Kick, Snare, HiHat, Clap, Tom** mit Tune/Decay/Click usw.
 - **Mikrofon** – direkt aufnehmen, mit Pegelanzeige, anschließend trimmen.
 - **Import** – beliebige Audiodatei (WAV/MP3/OGG …) laden und als Sample nutzen.
+  Du kannst Audiodateien auch **vom Desktop in das Fenster ziehen** (Drag & Drop) –
+  sie werden automatisch als Sample-Instrumente importiert.
 
 Jede Quelle zeigt eine **Wellenform-Vorschau**. Mit *„Als Sample backen"* wird ein
 Synth/Drum offline zu einem festen Sample gerendert; sonst wird es als spielbares
