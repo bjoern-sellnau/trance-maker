@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trance Maker — Track- &amp; Sample-Maker</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">🎛️</span> Trance&nbsp;Maker</div>
+
+    <div class="transport">
+      <button id="btnPlay" class="t-btn play" title="Wiedergabe (Leertaste)">▶</button>
+      <button id="btnStop" class="t-btn stop" title="Stopp">■</button>
+      <label class="field">BPM
+        <input id="inpBpm" type="number" min="40" max="300" step="1" value="138" />
+      </label>
+      <label class="field">Reihen/Beat
+        <input id="inpRpb" type="number" min="1" max="8" step="1" value="4" />
+      </label>
+      <label class="check" title="Ganzen Song entlang der Order-Liste abspielen">
+        <input id="chkSong" type="checkbox" /> Song
+      </label>
+      <span class="vu" id="vuMeter"><span class="vu-bar"></span></span>
+    </div>
+
+    <div class="projectbar">
+      <button id="btnNew" class="p-btn">Neu</button>
+      <button id="btnOpen" class="p-btn">Öffnen</button>
+      <button id="btnSave" class="p-btn">Speichern</button>
+      <button id="btnExport" class="p-btn accent">WAV&nbsp;Export</button>
+      <input id="fileOpen" type="file" accept=".trance,.json,application/json" hidden />
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel tracker-panel">
+      <div class="panel-head">
+        <h2>Tracker</h2>
+        <div class="pattern-controls" id="patternControls"></div>
+      </div>
+      <div class="tracker-wrap">
+        <div id="tracker" class="tracker" tabindex="0" aria-label="Tracker-Pattern"></div>
+      </div>
+      <div class="tracker-help">
+        Tastatur: <kbd>Z S X D C…</kbd> &amp; <kbd>Q 2 W 3 E…</kbd> = Noten &nbsp;·&nbsp;
+        <kbd>1</kbd>=Note-Aus &nbsp;·&nbsp; <kbd>Entf</kbd>=löschen &nbsp;·&nbsp;
+        <kbd>↑↓←→</kbd>=Cursor &nbsp;·&nbsp; <kbd>+/-</kbd>=Oktave (<span id="octLabel">4</span>)
+      </div>
+    </section>
+
+    <section class="panel side-panel">
+      <div class="tabs" id="sideTabs">
+        <button class="tab active" data-tab="instruments">Instrumente</button>
+        <button class="tab" data-tab="samplemaker">Sample&nbsp;Maker</button>
+        <button class="tab" data-tab="mixer">Mixer</button>
+      </div>
+
+      <div class="tabpanel" data-panel="instruments">
+        <div class="inst-toolbar">
+          <span class="muted">Aktiv im Tracker:</span>
+          <strong id="activeInstName">—</strong>
+        </div>
+        <ul id="instList" class="inst-list"></ul>
+      </div>
+
+      <div class="tabpanel hidden" data-panel="samplemaker">
+        <div class="sm-subtabs" id="smSubtabs">
+          <button class="subtab active" data-sm="synth">Synth</button>
+          <button class="subtab" data-sm="drum">Drum</button>
+          <button class="subtab" data-sm="mic">Mikrofon</button>
+          <button class="subtab" data-sm="import">Import</button>
+        </div>
+        <div class="sm-body" id="smBody"></div>
+        <div class="waveform-box">
+          <canvas id="waveCanvas" width="520" height="120"></canvas>
+        </div>
+        <div class="sm-actions">
+          <button id="btnPreview" class="p-btn">▶ Vorhören</button>
+          <button id="btnAddInst" class="p-btn accent">＋ Als Instrument hinzufügen</button>
+        </div>
+      </div>
+
+      <div class="tabpanel hidden" data-panel="mixer">
+        <div id="mixer" class="mixer"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="statusbar">
+    <span id="status">Bereit.</span>
+    <span class="spacer"></span>
+    <span class="hint">Web Audio API · läuft komplett lokal im Browser</span>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

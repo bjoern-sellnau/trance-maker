@@ -1,0 +1,8 @@
+node_modules/
+*.log
+.DS_Store
+dist/
+.cache/
+*.wav
+*.trance
+!demo/*.trance

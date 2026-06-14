@@ -1,0 +1,21 @@
+{
+  "name": "trance-maker",
+  "version": "1.0.0",
+  "description": "Browser-basierter Track- und Sample-Maker im Stil von Data Becker Techno Maker / Magix Music Maker mit Tracker-Interface, Mikrofon-Aufnahme, Synthese sowie Import/Export.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "tracker",
+    "daw",
+    "techno",
+    "music-maker",
+    "web-audio",
+    "sampler",
+    "synthesizer"
+  ],
+  "license": "MIT"
+}
