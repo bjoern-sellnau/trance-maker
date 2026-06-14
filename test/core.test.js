@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { midiToFreq, midiToName } from '../js/util.js';
-import { defaultProject, createInstrument, createPattern, createClip, arrangementEndBeats } from '../js/model.js';
+import { defaultProject, emptyProject, createInstrument, createPattern, createClip, arrangementEndBeats } from '../js/model.js';
 import { encodeWAV, arrayBufferToBase64, base64ToArrayBuffer, audioBufferToBase64Wav } from '../js/audio/wav.js';
 import { serializeProject, deserializeProject } from '../js/project.js';
 
@@ -55,6 +55,15 @@ test('Arrangement: Defaultprojekt hat Clips, Endberechnung stimmt', () => {
   assert.ok(arrangementEndBeats(song.arrangement) >= 8);
   const empty = { clips: [] };
   assert.equal(arrangementEndBeats(empty), 0);
+});
+
+test('emptyProject: Instrumente bleiben, Tracker & Arranger leer', () => {
+  const { song } = emptyProject();
+  assert.equal(song.instruments.length, 8);
+  assert.equal(song.patterns.length, 1);
+  assert.equal(song.arrangement.clips.length, 0);
+  const allEmpty = song.patterns[0].cells.every((row) => row.every((c) => c === null));
+  assert.ok(allEmpty, 'alle Tracker-Zellen müssen leer sein');
 });
 
 test('createClip: Defaults', () => {

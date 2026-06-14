@@ -74,10 +74,8 @@ export function arrangementEndBeats(arr) {
 
 const setCell = (pat, row, ch, midi, instId) => { pat.cells[row][ch] = { midi, inst: instId }; };
 
-/** Standardprojekt mit Instrumenten und einem treibenden Techno-Demo-Beat. */
-export function defaultProject() {
-  const song = createSong();
-
+/** Die acht Standard-Instrumente (von Default- und Leerprojekt genutzt). */
+export function defaultInstruments() {
   const kick = createInstrument({ name: 'Kick', type: 'drum', drum: 'kick', tune: 50, decay: 0.36, click: 0.35 });
   const clap = createInstrument({ name: 'Clap', type: 'drum', drum: 'clap', decay: 0.22, gain: 0.8 });
   const chat = createInstrument({ name: 'Hat (zu)', type: 'drum', drum: 'hat', decay: 0.04, cutoff: 8000, gain: 0.5 });
@@ -95,7 +93,23 @@ export function defaultProject() {
     name: 'Pluck', type: 'synth', wave: 'triangle', cutoff: 3500, q: 3,
     attack: 0.002, decay: 0.16, sustain: 0.0, release: 0.12, gain: 0.6
   });
+  return [kick, clap, chat, ohat, snare, bass, lead, pluck];
+}
 
+/** Leeres Projekt: Instrumente bleiben, aber Tracker & Arranger sind komplett leer. */
+export function emptyProject() {
+  const song = createSong();
+  song.instruments = defaultInstruments();
+  song.patterns = [createPattern('Pattern', song.channels, 16)];
+  song.order = [0];
+  // song.arrangement ist durch createSong() bereits leer
+  return { version: 1, song };
+}
+
+/** Standardprojekt mit Instrumenten und einem treibenden Techno-Demo-Beat. */
+export function defaultProject() {
+  const song = createSong();
+  const [kick, clap, chat, ohat, snare, bass, lead, pluck] = defaultInstruments();
   song.instruments = [kick, clap, chat, ohat, snare, bass, lead, pluck];
 
   // ----- Pattern A: Beat + Bassline -----
