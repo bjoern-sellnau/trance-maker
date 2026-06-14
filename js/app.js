@@ -1,7 +1,7 @@
 // Zentrale App: Zustand + Verdrahtung aller Bedienelemente.
 
 import { $, el, colorForIndex, clamp } from './util.js';
-import { defaultProject, createPattern, createInstrument } from './model.js';
+import { defaultProject, emptyProject, createPattern, createInstrument } from './model.js';
 import { Sequencer } from './sequencer.js';
 import { MicRecorder } from './audio/recorder.js';
 import { TrackerUI } from './ui/tracker.js';
@@ -103,7 +103,10 @@ export class App {
   // ---------- Projekt-Buttons ----------
   bindProjectButtons() {
     $('#btnNew').addEventListener('click', () => {
-      if (confirm('Neues Projekt – aktuelle Arbeit verwerfen?')) this.loadProject(defaultProject());
+      if (confirm('Neues, leeres Projekt – aktuelle Arbeit verwerfen?')) {
+        this.loadProject(emptyProject());
+        this.setStatus('Neues leeres Projekt.');
+      }
     });
     $('#btnSave').addEventListener('click', () => { saveProjectToFile(this.project); this.setStatus('Projekt gespeichert (.trance).'); });
     const fileOpen = $('#fileOpen');
