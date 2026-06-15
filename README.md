@@ -88,8 +88,9 @@ Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 - **Import** – beliebige Audiodatei (WAV/MP3/OGG …) laden und als Sample nutzen.
   Du kannst Audiodateien auch **vom Desktop in das Fenster ziehen** (Drag & Drop) –
   sie werden automatisch als Sample-Instrumente importiert.
-- **Presets** – großer, nach **Kategorien** geordneter Katalog (Kick & Drums, Bass, Lead,
-  Pluck, Pad) zum Hinzufügen mit einem Klick.
+- **Presets** – **500+ Sounds**, nach **Kategorien** geordnet: Kick & Drums, Bass, Lead,
+  Pluck, Pad, **Keyboard** sowie je ~125 für **Trance, EDM, Rock und Metal**. Kategorie
+  im Dropdown wählen, Preset per Klick hinzufügen.
 
 Jede Quelle zeigt eine **Wellenform-Vorschau**. Mit *„Als Sample backen"* wird ein
 Synth/Drum offline zu einem festen Sample gerendert; sonst wird es als spielbares
@@ -102,9 +103,12 @@ Im Tab *Instrumente* ist alles nach **Kategorien** gruppiert. Pro Instrument:
 (Kopie zum Weiterbasteln) und **🗑 Löschen**; Doppelklick auf den Namen = umbenennen.
 
 ### 🎹 Keyboard & 🥁 Drum-Kit
-- **Keyboard** – eine On-Screen-Klaviatur (2 Oktaven, Oktavwahl) zum Einspielen von
-  **Melodien** mit dem ausgewählten Instrument.
-- **Drum-Kit** – Pads für alle Drum-Instrumente zum Spielen von **Beats**.
+- **Keyboard** – On-Screen-Klaviatur (2 Oktaven, Oktavwahl) zum Einspielen von
+  **Melodien**. Über ein **Instrument-Dropdown** wählst du, womit gespielt wird –
+  inklusive keyboard-typischer Sounds (Grand Piano, E-Piano, Orgel, Clavinet,
+  Glocken, Streicher, Cembalo, Synth Keys).
+- **Drum-Kit** – frei **belegbare Pads**: pro Pad per Auswahl ein Drum-Instrument
+  zuweisen, Pads hinzufügen/entfernen oder mit „Alle Drums" füllen.
 
 Ist die **Tracker-Ansicht** aktiv, landen gespielte Noten/Schläge direkt am Cursor –
 so baust du Melodien und Drums Schritt für Schritt. Sonst dienen sie zum Vorhören.

@@ -20,6 +20,7 @@ export class App {
     this.viewMode = 'arranger';       // 'tracker' | 'arranger' (Arranger ist Standard)
     this.mutedChannels = new Set();
     this.octave = 4;
+    this.drumkitPads = null;          // belegbare Drum-Kit-Pads (Instrument-IDs)
     this.selectedInstrumentId = this.project.song.instruments[0]?.id || null;
     this.seq = new Sequencer(this);
     this.recorder = new MicRecorder();
@@ -258,7 +259,8 @@ export class App {
     this.renderInstrumentList();
     const inst = this.selectedInstrument;
     $('#activeInstName').textContent = inst ? inst.name : '—';
-    const kb = $('#kbInstName'); if (kb) kb.textContent = inst ? inst.name : '—';
+    const kbsel = $('#kbInstSelect');
+    if (kbsel && inst && inst.type !== 'drum') kbsel.value = inst.id;
   }
 
   addInstrument(inst) {
