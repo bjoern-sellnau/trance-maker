@@ -15,12 +15,12 @@ export function createInstrument(opts = {}) {
   if (base.type === 'synth') {
     return Object.assign(base, {
       wave: 'sawtooth', attack: 0.005, decay: 0.12, sustain: 0.7, release: 0.18,
-      cutoff: 4000, q: 1, sub: 0, fat: false, detune: 0, gain: 0.8
+      cutoff: 4000, q: 1, sub: 0, fat: false, detune: 0, drive: 0, gain: 0.8
     }, opts);
   }
   if (base.type === 'drum') {
     return Object.assign(base, {
-      drum: 'kick', tune: 50, decay: 0.34, click: 0.3, pitched: false, baseNote: 60, gain: 0.9
+      drum: 'kick', tune: 50, decay: 0.34, click: 0.3, pitched: false, baseNote: 60, drive: 0, gain: 0.9
     }, opts);
   }
   // sample
@@ -72,6 +72,25 @@ export function arrangementEndBeats(arr) {
   return end;
 }
 
+/**
+ * Auslösungen eines Clips: füllt die Clip-Länge mit dem Instrument.
+ * - synth: ein gehaltener Ton über die ganze Länge
+ * - drum:  Wiederholung pro Beat
+ * - sample: Kacheln in Sample-Länge (nahtlos aneinander)
+ * Liefert [{ offsetBeats, durBeats }].
+ */
+export function clipTriggers(clip, inst, spb) {
+  const len = clip.lengthBeats;
+  if (!inst || inst.type === 'synth') return [{ offsetBeats: 0, durBeats: len }];
+  let step;
+  if (inst.type === 'sample') step = inst.buffer ? Math.max(0.125, inst.buffer.duration / spb) : len;
+  else step = 1; // drum
+  const out = [{ offsetBeats: 0, durBeats: step }];
+  let t = step;
+  while (t < len - 0.5 * step) { out.push({ offsetBeats: t, durBeats: step }); t += step; }
+  return out;
+}
+
 const setCell = (pat, row, ch, midi, instId) => { pat.cells[row][ch] = { midi, inst: instId }; };
 
 /** Die acht Standard-Instrumente (von Default- und Leerprojekt genutzt). */
@@ -93,7 +112,43 @@ export function defaultInstruments() {
     name: 'Pluck', type: 'synth', wave: 'triangle', cutoff: 3500, q: 3,
     attack: 0.002, decay: 0.16, sustain: 0.0, release: 0.12, gain: 0.6
   });
-  return [kick, clap, chat, ohat, snare, bass, lead, pluck];
+
+  // ----- Trance / Hardstyle -----
+  const hardKick = createInstrument({
+    name: 'Hardstyle Kick', type: 'drum', drum: 'kick', tune: 60, decay: 0.5,
+    pitchDecay: 0.09, click: 0.6, drive: 0.8, gain: 0.95
+  });
+  const supersaw = createInstrument({
+    name: 'Supersaw', type: 'synth', wave: 'sawtooth', fat: true, detune: 12,
+    cutoff: 6500, q: 1, attack: 0.02, decay: 0.3, sustain: 0.75, release: 0.4, drive: 0.12, gain: 0.4
+  });
+  const trancePluck = createInstrument({
+    name: 'Trance Pluck', type: 'synth', wave: 'sawtooth', cutoff: 4200, q: 5,
+    attack: 0.002, decay: 0.18, sustain: 0.0, release: 0.14, gain: 0.55
+  });
+  const trancePad = createInstrument({
+    name: 'Trance Pad', type: 'synth', wave: 'sawtooth', fat: true, cutoff: 2600, q: 1,
+    attack: 0.45, decay: 0.6, sustain: 0.85, release: 0.9, gain: 0.32
+  });
+  const hoover = createInstrument({
+    name: 'Hoover', type: 'synth', wave: 'sawtooth', fat: true, detune: 22, cutoff: 3800, q: 2,
+    attack: 0.01, decay: 0.25, sustain: 0.7, release: 0.3, drive: 0.35, gain: 0.38
+  });
+  const screech = createInstrument({
+    name: 'Screech', type: 'synth', wave: 'sawtooth', fat: true, cutoff: 5200, q: 8,
+    attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.3, drive: 0.5, gain: 0.3
+  });
+  const acidBass = createInstrument({
+    name: 'Acid Bass', type: 'synth', wave: 'sawtooth', cutoff: 500, q: 14, sub: 0.2,
+    attack: 0.004, decay: 0.22, sustain: 0.2, release: 0.1, drive: 0.3, gain: 0.6
+  });
+  const subBass = createInstrument({
+    name: 'Sub Bass', type: 'synth', wave: 'sine', cutoff: 3000, q: 0.7,
+    attack: 0.005, decay: 0.2, sustain: 0.9, release: 0.12, gain: 0.8
+  });
+
+  return [kick, clap, chat, ohat, snare, bass, lead, pluck,
+    hardKick, supersaw, trancePluck, trancePad, hoover, screech, acidBass, subBass];
 }
 
 /** Leeres Projekt: Instrumente bleiben, aber Tracker & Arranger sind komplett leer. */
@@ -109,8 +164,9 @@ export function emptyProject() {
 /** Standardprojekt mit Instrumenten und einem treibenden Techno-Demo-Beat. */
 export function defaultProject() {
   const song = createSong();
-  const [kick, clap, chat, ohat, snare, bass, lead, pluck] = defaultInstruments();
-  song.instruments = [kick, clap, chat, ohat, snare, bass, lead, pluck];
+  const all = defaultInstruments();
+  song.instruments = all;
+  const [kick, clap, chat, ohat, snare, bass, lead, pluck] = all;
 
   // ----- Pattern A: Beat + Bassline -----
   const A = createPattern('A — Beat', song.channels, 16);

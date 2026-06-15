@@ -23,6 +23,21 @@ function makeNoiseSource(ctx) {
   return s;
 }
 
+// Weiche Sättigung/Verzerrung (für Hardstyle-Kicks, Hoover, Screech …).
+function makeDistortion(ctx, amount) {
+  const ws = ctx.createWaveShaper();
+  const k = Math.max(0, amount) * 100;
+  const n = 1024;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 2 - 1;
+    curve[i] = (1 + k) * x / (1 + k * Math.abs(x));
+  }
+  ws.curve = curve;
+  ws.oversample = '4x';
+  return ws;
+}
+
 // Sanftes Abklingen am Param ohne Klick.
 function rampDown(param, t, dur = 0.006) {
   try { param.cancelAndHoldAtTime(t); } catch (_) { param.cancelScheduledValues(t); }
@@ -97,7 +112,14 @@ function triggerSynth(ctx, dest, inst, midi, t, vel, opts) {
     oscs.push(sub);
   }
 
-  filter.connect(amp);
+  // optionale Verzerrung nach dem Filter
+  if (inst.drive) {
+    const dist = makeDistortion(ctx, inst.drive);
+    filter.connect(dist);
+    dist.connect(amp);
+  } else {
+    filter.connect(amp);
+  }
   amp.connect(dest);
 
   const stopT = t + hold + r;
@@ -137,13 +159,16 @@ function triggerDrum(ctx, dest, inst, midi, t, vel) {
   const kind = inst.drum || 'kick';
   const mul = inst.pitched ? Math.pow(2, (midi - (inst.baseNote ?? 60)) / 12) : 1;
   const peak = (inst.gain ?? 0.9) * vel;
+  // optionale Verzerrung (Hardstyle-Kick)
+  let out = dest;
+  if (inst.drive) { const d = makeDistortion(ctx, inst.drive); d.connect(dest); out = d; }
   switch (kind) {
-    case 'kick': return drumKick(ctx, dest, inst, t, peak, mul);
-    case 'snare': return drumSnare(ctx, dest, inst, t, peak, mul);
-    case 'clap': return drumClap(ctx, dest, inst, t, peak);
-    case 'tom': return drumTom(ctx, dest, inst, t, peak, mul);
+    case 'kick': return drumKick(ctx, out, inst, t, peak, mul);
+    case 'snare': return drumSnare(ctx, out, inst, t, peak, mul);
+    case 'clap': return drumClap(ctx, out, inst, t, peak);
+    case 'tom': return drumTom(ctx, out, inst, t, peak, mul);
     case 'hat':
-    default: return drumHat(ctx, dest, inst, t, peak);
+    default: return drumHat(ctx, out, inst, t, peak);
   }
 }
 
@@ -247,5 +272,11 @@ export async function renderInstrumentToBuffer(inst, midi = 60, lengthSec = 1.2)
   const dest = offline.createGain();
   dest.connect(offline.destination);
   triggerInstrument(offline, dest, inst, midi, 0, { duration: lengthSec * 0.7 });
-  return offline.startRendering();
+  const buffer = await offline.startRendering();
+  // Gebackene Samples gegen Clipping schützen (z.B. stark verzerrte Sounds).
+  const d = buffer.getChannelData(0);
+  let peak = 0;
+  for (let i = 0; i < d.length; i++) { const a = Math.abs(d[i]); if (a > peak) peak = a; }
+  if (peak > 0.99) { const g = 0.99 / peak; for (let i = 0; i < d.length; i++) d[i] *= g; }
+  return buffer;
 }

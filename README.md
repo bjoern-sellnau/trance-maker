@@ -66,6 +66,9 @@ Die loop-/blockbasierte Ansicht wie bei Magix Music Maker ist die **Startansicht
 - **Spuren (Lanes) auf einer Zeitleiste**; Takte und Spurenanzahl frei einstellbar.
 - Instrument links auswählen, dann **in eine Spur klicken = Sample-Block setzen** –
   oder ein **Instrument aus der Liste direkt in eine Spur ziehen** (Drag & Drop).
+- **Rahmen aufziehen**: in einer Spur einen Bereich über mehrere Beats/Takte ziehen –
+  der Block wird mit dem Sample **gefüllt** (Samples kacheln nahtlos, Drums wiederholen
+  pro Beat, z. B. für Hardstyle-Kick-Rolls).
 - Blöcke per **Drag verschieben**, an der **rechten Kante in der Länge ziehen**,
   mit **✕** oder **Entf** löschen; **Leeren**-Button räumt alles ab.
 - Eigener **Playhead**; die Wiedergabe loopt die Arrangement-Länge.
@@ -78,12 +81,17 @@ teilen sich dieselbe Instrument-/Sample-Bibliothek.
 Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 
 - **Synth** – Oszillator (Sinus/Sägezahn/Rechteck/Dreieck), ADSR-Hüllkurve,
-  Tiefpassfilter mit Resonanz, Sub-Oszillator, Verstimmung, „Fat"-Modus (3 Oszillatoren).
+  Tiefpassfilter mit Resonanz, Sub-Oszillator, Verstimmung, „Fat"-Modus (3 Oszillatoren)
+  und **Drive/Verzerrung** (für Hardstyle-Kicks, Hoover, Screech).
 - **Drum** – Synthese von **Kick, Snare, HiHat, Clap, Tom** mit Tune/Decay/Click usw.
 - **Mikrofon** – direkt aufnehmen, mit Pegelanzeige, anschließend trimmen.
 - **Import** – beliebige Audiodatei (WAV/MP3/OGG …) laden und als Sample nutzen.
   Du kannst Audiodateien auch **vom Desktop in das Fenster ziehen** (Drag & Drop) –
   sie werden automatisch als Sample-Instrumente importiert.
+
+Mitgeliefert sind **16 Instrumente**: klassische Drums (Kick, Clap, HiHats, Snare) und
+Synths (Bass, Lead, Pluck) sowie **Trance/Hardstyle-Presets** – Hardstyle Kick, Supersaw,
+Trance Pluck, Trance Pad, Hoover, Screech, Acid Bass und Sub Bass.
 
 Jede Quelle zeigt eine **Wellenform-Vorschau**. Mit *„Als Sample backen"* wird ein
 Synth/Drum offline zu einem festen Sample gerendert; sonst wird es als spielbares

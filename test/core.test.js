@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { midiToFreq, midiToName } from '../js/util.js';
-import { defaultProject, emptyProject, createInstrument, createPattern, createClip, arrangementEndBeats } from '../js/model.js';
+import { defaultProject, emptyProject, createInstrument, createPattern, createClip, arrangementEndBeats, clipTriggers } from '../js/model.js';
 import { encodeWAV, arrayBufferToBase64, base64ToArrayBuffer, audioBufferToBase64Wav } from '../js/audio/wav.js';
 import { serializeProject, deserializeProject } from '../js/project.js';
 
@@ -22,7 +22,7 @@ test('midiToName', () => {
 // ---- model ----
 test('defaultProject: Struktur und Demo-Beat', () => {
   const { song } = defaultProject();
-  assert.equal(song.instruments.length, 8);
+  assert.equal(song.instruments.length, 16);
   assert.equal(song.patterns.length, 2);
   assert.deepEqual(song.order, [0, 0, 1, 1]);
   // Kick auf Reihe 0, Kanal 0 in Pattern A
@@ -59,11 +59,26 @@ test('Arrangement: Defaultprojekt hat Clips, Endberechnung stimmt', () => {
 
 test('emptyProject: Instrumente bleiben, Tracker & Arranger leer', () => {
   const { song } = emptyProject();
-  assert.equal(song.instruments.length, 8);
+  assert.equal(song.instruments.length, 16);
   assert.equal(song.patterns.length, 1);
   assert.equal(song.arrangement.clips.length, 0);
   const allEmpty = song.patterns[0].cells.every((row) => row.every((c) => c === null));
   assert.ok(allEmpty, 'alle Tracker-Zellen müssen leer sein');
+});
+
+test('clipTriggers: füllt die Länge je nach Instrumenttyp', () => {
+  const synth = createInstrument({ type: 'synth' });
+  let tr = clipTriggers({ lengthBeats: 8 }, synth, 0.5);
+  assert.equal(tr.length, 1);            // ein gehaltener Ton
+  assert.equal(tr[0].durBeats, 8);
+
+  const drum = createInstrument({ type: 'drum' });
+  tr = clipTriggers({ lengthBeats: 4 }, drum, 0.5);
+  assert.equal(tr.length, 4);            // pro Beat ein Schlag
+
+  const smp = createInstrument({ type: 'sample' }); // ohne Buffer
+  tr = clipTriggers({ lengthBeats: 4 }, smp, 0.5);
+  assert.equal(tr.length, 1);
 });
 
 test('createClip: Defaults', () => {

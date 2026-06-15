@@ -3,7 +3,7 @@
 
 import { getCtx, getMaster, ensureRunning } from './audio/context.js';
 import { triggerInstrument } from './audio/instruments.js';
-import { arrangementEndBeats, BEATS_PER_BAR } from './model.js';
+import { arrangementEndBeats, BEATS_PER_BAR, clipTriggers } from './model.js';
 
 export class Sequencer {
   constructor(app) {
@@ -147,9 +147,16 @@ export class Sequencer {
   // ---------- Arranger (Music-Maker-Zeitleiste) ----------
   _buildArrEvents() {
     const arr = this.song.arrangement || { clips: [] };
-    this._arrEvents = (arr.clips || []).slice()
-      .sort((a, b) => a.startBeat - b.startBeat)
-      .map((c) => ({ beat: c.startBeat, durBeats: c.lengthBeats, inst: c.inst, midi: c.midi }));
+    const spb = this._spb;
+    const events = [];
+    for (const c of (arr.clips || [])) {
+      const inst = this.app.getInstrument(c.inst);
+      for (const tr of clipTriggers(c, inst, spb)) {
+        events.push({ beat: c.startBeat + tr.offsetBeats, durBeats: tr.durBeats, inst: c.inst, midi: c.midi });
+      }
+    }
+    events.sort((a, b) => a.beat - b.beat);
+    this._arrEvents = events;
     this._arrLenBeats = Math.max(arrangementEndBeats(arr), BEATS_PER_BAR);
   }
 
