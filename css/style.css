@@ -227,6 +227,41 @@ kbd { background: var(--bg3); border: 1px solid var(--line); border-radius: 4px;
 /* Instrumente sind in den Arranger ziehbar */
 .inst-item { cursor: grab; }
 .inst-item:active { cursor: grabbing; }
+.inst-item button { padding: 2px 3px; }
+
+/* Schmalere Tabs (5 Stück) */
+.tab { font-size: 11px; padding: 8px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Kategorien in Liste & Presets */
+.inst-cat { list-style: none; margin: 9px 0 2px; font-size: 10px; text-transform: uppercase; letter-spacing: .7px; color: var(--accent2); opacity: .85; }
+.inst-cat:first-child { margin-top: 0; }
+.sm-cat { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--accent2); margin: 8px 0 2px; }
+
+/* Instrument bearbeiten – Kopfzeile */
+.sm-edit-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--bg3); border: 1px solid var(--accent); border-radius: 8px; margin-bottom: 6px; font-size: 12px; }
+.sm-edit-head strong { color: var(--accent); }
+.sm-edit-head .pc-btn { margin-left: auto; }
+
+/* Klaviatur */
+.kb-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; font-size: 12px; }
+.kb-oct { margin-left: auto; display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.kb-oct .pc-btn { padding: 2px 9px; }
+.keyboard { position: relative; height: 150px; user-select: none; margin-bottom: 8px; }
+.kb-whites { display: flex; height: 100%; }
+.kb-key.white { flex: 1; background: linear-gradient(#fafafa, #e7e7ee); border: 1px solid #2a313d; border-radius: 0 0 5px 5px; display: flex; align-items: flex-end; justify-content: center; color: #666; }
+.kb-key.white.down { background: linear-gradient(#bfe9d6, #8fd9bd); }
+.kb-label { font-size: 9px; padding-bottom: 4px; pointer-events: none; }
+.kb-blacks { position: absolute; top: 0; left: 0; right: 0; height: 62%; pointer-events: none; }
+.kb-key.black { position: absolute; transform: translateX(-50%); height: 100%; background: linear-gradient(#262b34, #0c0e12); border: 1px solid #000; border-radius: 0 0 4px 4px; pointer-events: auto; box-shadow: 0 2px 4px rgba(0,0,0,.5); }
+.kb-key.black.down { background: linear-gradient(#2f7f63, #1c5a44); }
+.kb-hint { font-size: 11px; }
+
+/* Drum-Kit-Pads */
+.drumkit { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.drum-pad { min-height: 56px; border: 2px solid var(--pad, #444); border-radius: 10px; background: var(--bg2); display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; padding: 6px; transition: transform .05s, background .05s; }
+.drum-pad:hover { background: var(--bg3); }
+.drum-pad.hit { background: var(--pad); color: #06120c; transform: scale(.96); }
+.pad-name { font-size: 12px; font-weight: 600; pointer-events: none; }
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
