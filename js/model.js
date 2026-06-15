@@ -127,8 +127,88 @@ export const PRESETS = [
   // Pad
   { category: 'Pad', name: 'Trance Pad', type: 'synth', wave: 'sawtooth', fat: true, cutoff: 2600, q: 1, attack: 0.45, decay: 0.6, sustain: 0.85, release: 0.9, gain: 0.32 },
   { category: 'Pad', name: 'Warm Pad', type: 'synth', wave: 'triangle', fat: true, cutoff: 2200, q: 0.8, attack: 0.6, decay: 0.8, sustain: 0.8, release: 1.1, gain: 0.34 },
-  { category: 'Pad', name: 'Choir Pad', type: 'synth', wave: 'sawtooth', fat: true, detune: 8, cutoff: 3000, q: 1, attack: 0.5, decay: 0.7, sustain: 0.9, release: 1.0, gain: 0.3 }
+  { category: 'Pad', name: 'Choir Pad', type: 'synth', wave: 'sawtooth', fat: true, detune: 8, cutoff: 3000, q: 1, attack: 0.5, decay: 0.7, sustain: 0.9, release: 1.0, gain: 0.3 },
+  // Keyboard-spezifische Sounds
+  { category: 'Keyboard', name: 'Grand Piano', type: 'synth', wave: 'triangle', attack: 0.002, decay: 0.6, sustain: 0.0, release: 0.35, cutoff: 5200, q: 0.8, gain: 0.6 },
+  { category: 'Keyboard', name: 'E-Piano', type: 'synth', wave: 'sine', attack: 0.002, decay: 0.5, sustain: 0.2, release: 0.4, cutoff: 4200, q: 0.8, gain: 0.6 },
+  { category: 'Keyboard', name: 'Orgel', type: 'synth', wave: 'square', attack: 0.01, decay: 0.2, sustain: 0.9, release: 0.2, cutoff: 4500, q: 0.7, gain: 0.4 },
+  { category: 'Keyboard', name: 'Clavinet', type: 'synth', wave: 'square', attack: 0.002, decay: 0.15, sustain: 0.1, release: 0.12, cutoff: 3600, q: 1.5, drive: 0.2, gain: 0.5 },
+  { category: 'Keyboard', name: 'Glocken', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.8, sustain: 0.0, release: 0.6, cutoff: 7000, q: 0.8, gain: 0.55 },
+  { category: 'Keyboard', name: 'Synth Keys', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.3, cutoff: 5000, q: 1, gain: 0.4 },
+  { category: 'Keyboard', name: 'Streicher', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.3, decay: 0.6, sustain: 0.85, release: 0.8, cutoff: 3500, q: 1, gain: 0.34 },
+  { category: 'Keyboard', name: 'Cembalo', type: 'synth', wave: 'square', attack: 0.001, decay: 0.4, sustain: 0.0, release: 0.3, cutoff: 5200, q: 1.2, gain: 0.5 }
 ];
+
+// ---- Genre-Preset-Generator: ~500 Variationen (Trance / EDM / Rock / Metal) ----
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateGenrePresets() {
+  const rng = mulberry32(20240615);          // fester Seed -> reproduzierbar
+  const INT = new Set(['cutoff', 'tune', 'detune']);
+  const sample = (k, lo, hi) => { const v = lo + rng() * (hi - lo); return INT.has(k) ? Math.round(v) : +v.toFixed(3); };
+  const pick = (arr) => arr[Math.floor(rng() * arr.length)];
+  const out = [];
+
+  const specs = {
+    Trance: [
+      { role: 'Lead', count: 25, type: 'synth', waves: ['sawtooth'], base: { fat: true, q: 1, attack: 0.02, sustain: 0.75 }, vary: { cutoff: [3500, 9000], detune: [4, 24], decay: [0.2, 0.5], release: [0.2, 0.7], drive: [0, 0.3], gain: [0.32, 0.45] } },
+      { role: 'Pluck', count: 25, type: 'synth', waves: ['sawtooth', 'triangle'], base: { attack: 0.002, sustain: 0.0 }, vary: { cutoff: [2500, 7000], q: [2, 7], decay: [0.1, 0.25], release: [0.08, 0.2], gain: [0.45, 0.6] } },
+      { role: 'Bass', count: 20, type: 'synth', waves: ['sawtooth'], base: { sub: 0.5, attack: 0.004, sustain: 0.25 }, vary: { cutoff: [350, 1100], q: [3, 9], decay: [0.12, 0.3], release: [0.06, 0.15], drive: [0, 0.25], gain: [0.5, 0.7] } },
+      { role: 'Pad', count: 20, type: 'synth', waves: ['sawtooth', 'triangle'], base: { fat: true, attack: 0.4, sustain: 0.85 }, vary: { cutoff: [1800, 4000], q: [0.7, 1.5], decay: [0.4, 0.8], release: [0.7, 1.3], gain: [0.28, 0.36] } },
+      { role: 'Stab', count: 20, type: 'synth', waves: ['sawtooth', 'square'], base: { fat: true, attack: 0.005, sustain: 0.3 }, vary: { cutoff: [2500, 6000], q: [1, 5], decay: [0.15, 0.35], release: [0.15, 0.4], detune: [6, 20], gain: [0.35, 0.48] } },
+      { role: 'Arp', count: 15, type: 'synth', waves: ['square', 'sawtooth'], base: { attack: 0.002, sustain: 0.0 }, vary: { cutoff: [3000, 8000], q: [1, 6], decay: [0.08, 0.2], release: [0.06, 0.15], gain: [0.4, 0.55] } }
+    ],
+    EDM: [
+      { role: 'Lead', count: 25, type: 'synth', waves: ['sawtooth', 'square'], base: { fat: true, attack: 0.01, sustain: 0.7 }, vary: { cutoff: [3000, 9000], detune: [8, 30], decay: [0.2, 0.5], release: [0.2, 0.5], drive: [0.1, 0.45], gain: [0.32, 0.46] } },
+      { role: 'Bass', count: 25, type: 'synth', waves: ['sawtooth', 'square'], base: { attack: 0.003, sustain: 0.3 }, vary: { cutoff: [300, 1200], q: [2, 8], decay: [0.1, 0.3], release: [0.05, 0.15], drive: [0.1, 0.5], sub: [0, 0.5], gain: [0.5, 0.68] } },
+      { role: 'Pluck', count: 20, type: 'synth', waves: ['sawtooth', 'triangle'], base: { attack: 0.002, sustain: 0.0 }, vary: { cutoff: [2500, 7000], q: [2, 7], decay: [0.1, 0.25], release: [0.08, 0.2], gain: [0.45, 0.6] } },
+      { role: 'Pad', count: 15, type: 'synth', waves: ['sawtooth'], base: { fat: true, attack: 0.35, sustain: 0.85 }, vary: { cutoff: [2000, 4500], q: [0.8, 1.6], decay: [0.4, 0.8], release: [0.6, 1.2], gain: [0.28, 0.36] } },
+      { role: 'Stab', count: 20, type: 'synth', waves: ['square', 'sawtooth'], base: { fat: true, attack: 0.004, sustain: 0.25 }, vary: { cutoff: [2500, 6500], q: [1, 5], decay: [0.12, 0.3], release: [0.1, 0.3], drive: [0.1, 0.4], gain: [0.35, 0.48] } },
+      { role: 'Wobble', count: 20, type: 'synth', waves: ['sawtooth'], base: { fat: true, sub: 0.3, attack: 0.005, sustain: 0.5 }, vary: { cutoff: [350, 1500], q: [6, 16], decay: [0.15, 0.4], release: [0.1, 0.3], drive: [0.2, 0.6], detune: [10, 30], gain: [0.4, 0.55] } }
+    ],
+    Rock: [
+      { role: 'Guitar', count: 25, type: 'synth', waves: ['square', 'sawtooth'], base: { attack: 0.005, sustain: 0.5 }, vary: { cutoff: [1800, 3800], q: [1.5, 4], decay: [0.2, 0.5], release: [0.15, 0.35], drive: [0.35, 0.7], gain: [0.34, 0.46] } },
+      { role: 'Lead', count: 20, type: 'synth', waves: ['square', 'sawtooth'], base: { attack: 0.006, sustain: 0.6 }, vary: { cutoff: [2500, 5500], q: [1, 3], decay: [0.2, 0.5], release: [0.2, 0.45], drive: [0.25, 0.55], gain: [0.34, 0.46] } },
+      { role: 'Bass', count: 20, type: 'synth', waves: ['sawtooth', 'triangle'], base: { attack: 0.004, sustain: 0.5 }, vary: { cutoff: [500, 1400], q: [1.5, 4], decay: [0.2, 0.5], release: [0.1, 0.25], drive: [0.1, 0.4], gain: [0.5, 0.66] } },
+      { role: 'Organ', count: 15, type: 'synth', waves: ['sine', 'triangle'], base: { attack: 0.01, sustain: 0.85 }, vary: { cutoff: [2500, 6000], q: [0.7, 2], decay: [0.2, 0.5], release: [0.15, 0.4], gain: [0.4, 0.55] } },
+      { role: 'Kick', count: 10, type: 'drum', drum: 'kick', base: { click: 0.4 }, vary: { tune: [45, 70], decay: [0.25, 0.45], drive: [0, 0.2], gain: [0.85, 0.95] } },
+      { role: 'Snare', count: 10, type: 'drum', drum: 'snare', base: {}, vary: { tune: [150, 260], decay: [0.12, 0.25], gain: [0.6, 0.8] } },
+      { role: 'Tom', count: 10, type: 'drum', drum: 'tom', base: { pitched: true }, vary: { tune: [80, 200], decay: [0.2, 0.45], gain: [0.6, 0.8] } },
+      { role: 'Pad', count: 15, type: 'synth', waves: ['sawtooth', 'triangle'], base: { fat: true, attack: 0.3, sustain: 0.8 }, vary: { cutoff: [1800, 4000], q: [0.7, 1.5], decay: [0.4, 0.8], release: [0.6, 1.1], gain: [0.28, 0.36] } }
+    ],
+    Metal: [
+      { role: 'Guitar', count: 30, type: 'synth', waves: ['square', 'sawtooth'], base: { attack: 0.004, sustain: 0.45 }, vary: { cutoff: [1100, 2600], q: [2, 5], decay: [0.15, 0.4], release: [0.1, 0.3], drive: [0.6, 0.95], gain: [0.3, 0.42] } },
+      { role: 'Chug Bass', count: 25, type: 'synth', waves: ['sawtooth', 'square'], base: { attack: 0.003, sustain: 0.35 }, vary: { cutoff: [350, 1000], q: [2, 6], decay: [0.1, 0.28], release: [0.06, 0.16], drive: [0.4, 0.8], sub: [0.1, 0.4], gain: [0.48, 0.64] } },
+      { role: 'Lead', count: 20, type: 'synth', waves: ['square', 'sawtooth'], base: { fat: true, attack: 0.006, sustain: 0.6 }, vary: { cutoff: [2500, 6000], q: [1, 4], decay: [0.2, 0.5], release: [0.2, 0.5], drive: [0.4, 0.8], detune: [4, 16], gain: [0.3, 0.42] } },
+      { role: 'Kick', count: 15, type: 'drum', drum: 'kick', base: { click: 0.7 }, vary: { tune: [50, 80], decay: [0.1, 0.22], drive: [0.3, 0.7], gain: [0.85, 0.97] } },
+      { role: 'Snare', count: 15, type: 'drum', drum: 'snare', base: {}, vary: { tune: [180, 320], decay: [0.1, 0.2], drive: [0, 0.3], gain: [0.65, 0.82] } },
+      { role: 'Tom', count: 10, type: 'drum', drum: 'tom', base: { pitched: true }, vary: { tune: [90, 220], decay: [0.18, 0.4], gain: [0.6, 0.8] } },
+      { role: 'Growl', count: 10, type: 'synth', waves: ['sawtooth'], base: { fat: true, sub: 0.3, attack: 0.005, sustain: 0.5 }, vary: { cutoff: [300, 1200], q: [6, 14], decay: [0.15, 0.4], release: [0.1, 0.3], drive: [0.5, 0.9], detune: [10, 28], gain: [0.4, 0.55] } }
+    ]
+  };
+
+  for (const genre of Object.keys(specs)) {
+    for (const role of specs[genre]) {
+      for (let n = 1; n <= role.count; n++) {
+        const p = Object.assign({ category: genre, name: `${genre} ${role.role} ${String(n).padStart(2, '0')}`, type: role.type }, role.base);
+        if (role.drum) p.drum = role.drum;
+        if (role.waves) p.wave = pick(role.waves);
+        for (const k of Object.keys(role.vary || {})) p[k] = sample(k, role.vary[k][0], role.vary[k][1]);
+        out.push(p);
+      }
+    }
+  }
+  return out;
+}
+
+PRESETS.push(...generateGenrePresets());
 
 /** Kategorien in Reihenfolge ihres ersten Auftretens. */
 export function presetCategories() {

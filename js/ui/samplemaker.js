@@ -36,6 +36,7 @@ export class SampleMakerUI {
 
     this.mode = 'synth';
     this.editTarget = null;   // bestehendes Instrument, das bearbeitet wird
+    this._presetCat = null;   // gewählte Preset-Kategorie
     this.synthDraft = createInstrument({ type: 'synth', name: 'Mein Synth' });
     this.drumDraft = createInstrument({ type: 'drum', name: 'Meine Drum', drum: 'kick' });
     this.bake = false;
@@ -151,15 +152,29 @@ export class SampleMakerUI {
   }
 
   renderPresets(b) {
-    b.appendChild(el('div', { class: 'muted', text: 'Klick fügt das Preset zu deinen Instrumenten hinzu:' }));
-    for (const cat of presetCategories()) {
-      b.appendChild(el('div', { class: 'sm-cat', text: cat }));
-      const row = el('div', { class: 'row-flex' });
-      for (const p of PRESETS.filter((x) => x.category === cat)) {
-        row.appendChild(el('div', { class: 'chip', text: p.name, onclick: () => this.app.addPresetInstrument(p) }));
-      }
-      b.appendChild(row);
+    const cats = presetCategories();
+    if (!cats.includes(this._presetCat)) this._presetCat = cats[0];
+    b.appendChild(el('div', { class: 'muted', text: 'Kategorie wählen, dann Preset anklicken zum Hinzufügen:' }));
+
+    const sel = el('select');
+    for (const c of cats) {
+      const n = PRESETS.filter((p) => p.category === c).length;
+      const o = el('option', { value: c, text: `${c} (${n})` });
+      if (c === this._presetCat) o.selected = true;
+      sel.appendChild(o);
     }
+    b.appendChild(el('div', { class: 'ctl' }, [el('label', { text: 'Kategorie' }), sel]));
+
+    const list = el('div', { class: 'row-flex', style: 'margin-top:8px' });
+    const fill = () => {
+      list.innerHTML = '';
+      for (const p of PRESETS.filter((x) => x.category === this._presetCat)) {
+        list.appendChild(el('div', { class: 'chip', text: p.name, title: 'Hinzufügen', onclick: () => this.app.addPresetInstrument(p) }));
+      }
+    };
+    sel.addEventListener('change', () => { this._presetCat = sel.value; fill(); });
+    b.appendChild(list);
+    fill();
   }
 
   renderSampleEdit(b) {

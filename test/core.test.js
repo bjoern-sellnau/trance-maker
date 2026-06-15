@@ -91,14 +91,26 @@ test('cloneInstrument: neue ID, kopierte Parameter, Kopie-Name', () => {
   assert.match(b.name, /Kopie/);
 });
 
-test('PRESETS: Katalog mit Kategorien', () => {
-  assert.ok(PRESETS.length >= 20);
+test('PRESETS: großer Katalog mit Genre-Kategorien', () => {
+  assert.ok(PRESETS.length >= 500, 'mindestens 500 Presets, hat ' + PRESETS.length);
   const cats = presetCategories();
-  assert.ok(cats.includes('Bass'));
-  assert.ok(cats.includes('Lead'));
-  assert.ok(cats.includes('Kick & Drums'));
-  // jedes Preset hat Name, Typ, Kategorie
-  for (const p of PRESETS) { assert.ok(p.name && p.type && p.category); }
+  for (const g of ['Kick & Drums', 'Bass', 'Lead', 'Keyboard', 'Trance', 'EDM', 'Rock', 'Metal']) {
+    assert.ok(cats.includes(g), 'Kategorie fehlt: ' + g);
+  }
+  // jedes Preset hat Name/Typ/Kategorie und gültigen Typ
+  for (const p of PRESETS) {
+    assert.ok(p.name && p.type && p.category);
+    assert.ok(['synth', 'drum', 'sample'].includes(p.type));
+  }
+});
+
+test('Alle Presets sind instanziierbar (keine NaN-Parameter)', () => {
+  for (const p of PRESETS) {
+    const inst = createInstrument(p);
+    assert.equal(typeof inst.gain, 'number');
+    assert.ok(!Number.isNaN(inst.gain));
+    if (inst.type === 'synth') assert.ok(!Number.isNaN(inst.cutoff));
+  }
 });
 
 test('createInstrument: Kategorie-Default', () => {
