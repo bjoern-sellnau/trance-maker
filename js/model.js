@@ -8,6 +8,7 @@ export function createInstrument(opts = {}) {
     id: uid('inst'),
     name: opts.name || 'Instrument',
     type: opts.type || 'synth',
+    category: opts.category || 'Sonstige',
     volume: opts.volume ?? 0.85,   // Mixer-Lautstärke
     mute: false,
     solo: false
@@ -93,62 +94,66 @@ export function clipTriggers(clip, inst, spb) {
 
 const setCell = (pat, row, ch, midi, instId) => { pat.cells[row][ch] = { midi, inst: instId }; };
 
-/** Die acht Standard-Instrumente (von Default- und Leerprojekt genutzt). */
+/** Preset-Katalog, nach Kategorien geordnet. */
+export const PRESETS = [
+  // Kick & Drums
+  { category: 'Kick & Drums', name: 'Kick', type: 'drum', drum: 'kick', tune: 50, decay: 0.36, click: 0.35 },
+  { category: 'Kick & Drums', name: 'Hardstyle Kick', type: 'drum', drum: 'kick', tune: 60, decay: 0.5, pitchDecay: 0.09, click: 0.6, drive: 0.8, gain: 0.95 },
+  { category: 'Kick & Drums', name: 'Punch Kick', type: 'drum', drum: 'kick', tune: 48, decay: 0.28, pitchDecay: 0.04, click: 0.5, drive: 0.2 },
+  { category: 'Kick & Drums', name: 'Deep Kick', type: 'drum', drum: 'kick', tune: 42, decay: 0.45, click: 0.15 },
+  { category: 'Kick & Drums', name: 'Clap', type: 'drum', drum: 'clap', decay: 0.22, gain: 0.8 },
+  { category: 'Kick & Drums', name: 'Snare', type: 'drum', drum: 'snare', tune: 190, decay: 0.18, gain: 0.7 },
+  { category: 'Kick & Drums', name: 'Rimshot', type: 'drum', drum: 'snare', tune: 320, decay: 0.08, gain: 0.6 },
+  { category: 'Kick & Drums', name: 'Hat (zu)', type: 'drum', drum: 'hat', decay: 0.04, cutoff: 8000, gain: 0.5 },
+  { category: 'Kick & Drums', name: 'Hat (offen)', type: 'drum', drum: 'hat', decay: 0.28, cutoff: 7000, gain: 0.45 },
+  { category: 'Kick & Drums', name: 'Crash', type: 'drum', drum: 'hat', decay: 1.0, cutoff: 5000, gain: 0.4 },
+  { category: 'Kick & Drums', name: 'Tom', type: 'drum', drum: 'tom', tune: 120, decay: 0.3, pitched: true },
+  // Bass
+  { category: 'Bass', name: 'Bass', type: 'synth', wave: 'sawtooth', cutoff: 700, q: 6, sub: 0.6, attack: 0.004, decay: 0.18, sustain: 0.2, release: 0.08, gain: 0.85 },
+  { category: 'Bass', name: 'Sub Bass', type: 'synth', wave: 'sine', cutoff: 3000, q: 0.7, attack: 0.005, decay: 0.2, sustain: 0.9, release: 0.12, gain: 0.8 },
+  { category: 'Bass', name: 'Acid Bass', type: 'synth', wave: 'sawtooth', cutoff: 500, q: 14, sub: 0.2, attack: 0.004, decay: 0.22, sustain: 0.2, release: 0.1, drive: 0.3, gain: 0.6 },
+  { category: 'Bass', name: 'Reese Bass', type: 'synth', wave: 'sawtooth', fat: true, detune: 28, cutoff: 900, q: 3, sub: 0.3, attack: 0.01, decay: 0.3, sustain: 0.7, release: 0.2, drive: 0.2, gain: 0.5 },
+  { category: 'Bass', name: 'Donk', type: 'synth', wave: 'square', cutoff: 4200, q: 9, attack: 0.001, decay: 0.09, sustain: 0.0, release: 0.05, drive: 0.25, gain: 0.55 },
+  // Lead
+  { category: 'Lead', name: 'Lead', type: 'synth', wave: 'square', cutoff: 5000, q: 2, fat: true, attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.25, gain: 0.5 },
+  { category: 'Lead', name: 'Supersaw', type: 'synth', wave: 'sawtooth', fat: true, detune: 12, cutoff: 6500, q: 1, attack: 0.02, decay: 0.3, sustain: 0.75, release: 0.4, drive: 0.12, gain: 0.4 },
+  { category: 'Lead', name: 'Hoover', type: 'synth', wave: 'sawtooth', fat: true, detune: 22, cutoff: 3800, q: 2, attack: 0.01, decay: 0.25, sustain: 0.7, release: 0.3, drive: 0.35, gain: 0.38 },
+  { category: 'Lead', name: 'Screech', type: 'synth', wave: 'sawtooth', fat: true, cutoff: 5200, q: 8, attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.3, drive: 0.5, gain: 0.3 },
+  { category: 'Lead', name: 'Saw Lead', type: 'synth', wave: 'sawtooth', cutoff: 5500, q: 1.5, attack: 0.01, decay: 0.2, sustain: 0.7, release: 0.25, gain: 0.4 },
+  // Pluck
+  { category: 'Pluck', name: 'Pluck', type: 'synth', wave: 'triangle', cutoff: 3500, q: 3, attack: 0.002, decay: 0.16, sustain: 0.0, release: 0.12, gain: 0.6 },
+  { category: 'Pluck', name: 'Trance Pluck', type: 'synth', wave: 'sawtooth', cutoff: 4200, q: 5, attack: 0.002, decay: 0.18, sustain: 0.0, release: 0.14, gain: 0.55 },
+  { category: 'Pluck', name: 'Glass Pluck', type: 'synth', wave: 'sine', cutoff: 6000, q: 2, attack: 0.001, decay: 0.25, sustain: 0.0, release: 0.2, gain: 0.6 },
+  // Pad
+  { category: 'Pad', name: 'Trance Pad', type: 'synth', wave: 'sawtooth', fat: true, cutoff: 2600, q: 1, attack: 0.45, decay: 0.6, sustain: 0.85, release: 0.9, gain: 0.32 },
+  { category: 'Pad', name: 'Warm Pad', type: 'synth', wave: 'triangle', fat: true, cutoff: 2200, q: 0.8, attack: 0.6, decay: 0.8, sustain: 0.8, release: 1.1, gain: 0.34 },
+  { category: 'Pad', name: 'Choir Pad', type: 'synth', wave: 'sawtooth', fat: true, detune: 8, cutoff: 3000, q: 1, attack: 0.5, decay: 0.7, sustain: 0.9, release: 1.0, gain: 0.3 }
+];
+
+/** Kategorien in Reihenfolge ihres ersten Auftretens. */
+export function presetCategories() {
+  const seen = [];
+  for (const p of PRESETS) if (!seen.includes(p.category)) seen.push(p.category);
+  return seen;
+}
+
+const presetByName = (name) => PRESETS.find((p) => p.name === name) || PRESETS[0];
+
+/** Tiefe Kopie eines Instruments mit neuer ID (Sample-Buffer wird geteilt). */
+export function cloneInstrument(inst) {
+  const copy = JSON.parse(JSON.stringify({ ...inst, buffer: undefined }));
+  delete copy.id;
+  copy.name = (inst.name || 'Instrument') + ' Kopie';
+  const out = createInstrument(copy);
+  if (inst.type === 'sample') out.buffer = inst.buffer || null;
+  return out;
+}
+
+/** Die Standard-Instrumente (von Default- und Leerprojekt genutzt). */
 export function defaultInstruments() {
-  const kick = createInstrument({ name: 'Kick', type: 'drum', drum: 'kick', tune: 50, decay: 0.36, click: 0.35 });
-  const clap = createInstrument({ name: 'Clap', type: 'drum', drum: 'clap', decay: 0.22, gain: 0.8 });
-  const chat = createInstrument({ name: 'Hat (zu)', type: 'drum', drum: 'hat', decay: 0.04, cutoff: 8000, gain: 0.5 });
-  const ohat = createInstrument({ name: 'Hat (offen)', type: 'drum', drum: 'hat', decay: 0.28, cutoff: 7000, gain: 0.45 });
-  const snare = createInstrument({ name: 'Snare', type: 'drum', drum: 'snare', tune: 190, decay: 0.18, gain: 0.7 });
-  const bass = createInstrument({
-    name: 'Bass', type: 'synth', wave: 'sawtooth', cutoff: 700, q: 6, sub: 0.6,
-    attack: 0.004, decay: 0.18, sustain: 0.2, release: 0.08, gain: 0.85
-  });
-  const lead = createInstrument({
-    name: 'Lead', type: 'synth', wave: 'square', cutoff: 5000, q: 2, fat: true,
-    attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.25, gain: 0.5
-  });
-  const pluck = createInstrument({
-    name: 'Pluck', type: 'synth', wave: 'triangle', cutoff: 3500, q: 3,
-    attack: 0.002, decay: 0.16, sustain: 0.0, release: 0.12, gain: 0.6
-  });
-
-  // ----- Trance / Hardstyle -----
-  const hardKick = createInstrument({
-    name: 'Hardstyle Kick', type: 'drum', drum: 'kick', tune: 60, decay: 0.5,
-    pitchDecay: 0.09, click: 0.6, drive: 0.8, gain: 0.95
-  });
-  const supersaw = createInstrument({
-    name: 'Supersaw', type: 'synth', wave: 'sawtooth', fat: true, detune: 12,
-    cutoff: 6500, q: 1, attack: 0.02, decay: 0.3, sustain: 0.75, release: 0.4, drive: 0.12, gain: 0.4
-  });
-  const trancePluck = createInstrument({
-    name: 'Trance Pluck', type: 'synth', wave: 'sawtooth', cutoff: 4200, q: 5,
-    attack: 0.002, decay: 0.18, sustain: 0.0, release: 0.14, gain: 0.55
-  });
-  const trancePad = createInstrument({
-    name: 'Trance Pad', type: 'synth', wave: 'sawtooth', fat: true, cutoff: 2600, q: 1,
-    attack: 0.45, decay: 0.6, sustain: 0.85, release: 0.9, gain: 0.32
-  });
-  const hoover = createInstrument({
-    name: 'Hoover', type: 'synth', wave: 'sawtooth', fat: true, detune: 22, cutoff: 3800, q: 2,
-    attack: 0.01, decay: 0.25, sustain: 0.7, release: 0.3, drive: 0.35, gain: 0.38
-  });
-  const screech = createInstrument({
-    name: 'Screech', type: 'synth', wave: 'sawtooth', fat: true, cutoff: 5200, q: 8,
-    attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.3, drive: 0.5, gain: 0.3
-  });
-  const acidBass = createInstrument({
-    name: 'Acid Bass', type: 'synth', wave: 'sawtooth', cutoff: 500, q: 14, sub: 0.2,
-    attack: 0.004, decay: 0.22, sustain: 0.2, release: 0.1, drive: 0.3, gain: 0.6
-  });
-  const subBass = createInstrument({
-    name: 'Sub Bass', type: 'synth', wave: 'sine', cutoff: 3000, q: 0.7,
-    attack: 0.005, decay: 0.2, sustain: 0.9, release: 0.12, gain: 0.8
-  });
-
-  return [kick, clap, chat, ohat, snare, bass, lead, pluck,
-    hardKick, supersaw, trancePluck, trancePad, hoover, screech, acidBass, subBass];
+  const names = ['Kick', 'Clap', 'Hat (zu)', 'Hat (offen)', 'Snare', 'Bass', 'Lead', 'Pluck',
+    'Hardstyle Kick', 'Supersaw', 'Trance Pluck', 'Trance Pad', 'Hoover', 'Screech', 'Acid Bass', 'Sub Bass'];
+  return names.map((n) => createInstrument(presetByName(n)));
 }
 
 /** Leeres Projekt: Instrumente bleiben, aber Tracker & Arranger sind komplett leer. */

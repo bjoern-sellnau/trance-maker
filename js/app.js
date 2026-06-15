@@ -1,12 +1,13 @@
 // Zentrale App: Zustand + Verdrahtung aller Bedienelemente.
 
 import { $, el, colorForIndex, clamp } from './util.js';
-import { defaultProject, emptyProject, createPattern, createInstrument } from './model.js';
+import { defaultProject, emptyProject, createPattern, createInstrument, cloneInstrument } from './model.js';
 import { Sequencer } from './sequencer.js';
 import { MicRecorder } from './audio/recorder.js';
 import { TrackerUI } from './ui/tracker.js';
 import { SampleMakerUI } from './ui/samplemaker.js';
 import { ArrangerUI } from './ui/arranger.js';
+import { KeyboardUI, DrumkitUI } from './ui/keyboard.js';
 import { getAnalyser, ensureRunning } from './audio/context.js';
 import { saveProjectToFile, openProjectFromFile, exportSongWav, decodeAudioFile } from './project.js';
 
@@ -38,6 +39,10 @@ export class App {
       btnPreview: $('#btnPreview'), btnAdd: $('#btnAddInst')
     });
     this.arranger = new ArrangerUI(this, $('#arranger'));
+    this.keyboard = new KeyboardUI(this, $('#keyboard'));
+    this.drumkit = new DrumkitUI(this, $('#drumkit'));
+    $('#kbOctUp').addEventListener('click', () => { this.setOctave(this.octave + 1); this.keyboard.render(); });
+    $('#kbOctDown').addEventListener('click', () => { this.setOctave(this.octave - 1); this.keyboard.render(); });
     this.seq.onArrPos = (beat) => this.arranger.setPlayhead(beat);
 
     this.seq.onStep = (patternIndex, row) => {
@@ -190,12 +195,16 @@ export class App {
   // ---------- Tabs ----------
   bindTabs() {
     $('#sideTabs').querySelectorAll('.tab').forEach((tab) => {
-      tab.addEventListener('click', () => {
-        $('#sideTabs').querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t === tab));
-        document.querySelectorAll('.tabpanel').forEach((p) => p.classList.toggle('hidden', p.dataset.panel !== tab.dataset.tab));
-        if (tab.dataset.tab === 'mixer') this.renderMixer();
-      });
+      tab.addEventListener('click', () => this.showTab(tab.dataset.tab));
     });
+  }
+
+  showTab(name) {
+    $('#sideTabs').querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.tabpanel').forEach((p) => p.classList.toggle('hidden', p.dataset.panel !== name));
+    if (name === 'mixer') this.renderMixer();
+    if (name === 'keyboard' && this.keyboard) this.keyboard.render();
+    if (name === 'drumkit' && this.drumkit) this.drumkit.render();
   }
 
   // ---------- Ansicht: Tracker / Arranger ----------
@@ -249,6 +258,7 @@ export class App {
     this.renderInstrumentList();
     const inst = this.selectedInstrument;
     $('#activeInstName').textContent = inst ? inst.name : '—';
+    const kb = $('#kbInstName'); if (kb) kb.textContent = inst ? inst.name : '—';
   }
 
   addInstrument(inst) {
@@ -283,35 +293,87 @@ export class App {
   renderInstrumentList() {
     const list = $('#instList');
     list.innerHTML = '';
+    const cats = [];
+    const byCat = new Map();
     this.song.instruments.forEach((inst, i) => {
-      const item = el('li', {
-        class: 'inst-item' + (inst.id === this.selectedInstrumentId ? ' active' : ''),
-        draggable: 'true',
-        title: 'In eine Arranger-Spur ziehen, um einen Block anzulegen',
-        ondragstart: (e) => {
-          e.dataTransfer.setData('application/x-trance-inst', inst.id);
-          e.dataTransfer.setData('text/plain', inst.name);
-          e.dataTransfer.effectAllowed = 'copy';
-          this.selectInstrument(inst.id);
-        },
-        onclick: () => { this.selectInstrument(inst.id); this.seq.preview(inst, 60, 0.5); }
-      }, [
-        el('span', { class: 'inst-num', text: String(i + 1).padStart(2, '0') }),
-        el('span', { class: 'inst-swatch', style: `background:${colorForIndex(i)}` }),
-        el('span', { class: 'inst-name', text: inst.name }),
-        el('span', { class: 'inst-kind', text: inst.type }),
-        el('button', { title: 'Umbenennen', text: '✎', onclick: (e) => { e.stopPropagation(); this.renameInstrument(inst); } }),
-        el('button', { title: 'Löschen', text: '🗑', onclick: (e) => { e.stopPropagation(); if (confirm('Instrument „' + inst.name + '" löschen?')) this.removeInstrument(inst.id); } })
-      ]);
-      list.appendChild(item);
+      const c = inst.category || 'Sonstige';
+      if (!byCat.has(c)) { byCat.set(c, []); cats.push(c); }
+      byCat.get(c).push({ inst, i });
     });
+    for (const c of cats) {
+      list.appendChild(el('li', { class: 'inst-cat', text: c }));
+      for (const { inst, i } of byCat.get(c)) list.appendChild(this._instItem(inst, i));
+    }
     const sel = this.selectedInstrument;
     $('#activeInstName').textContent = sel ? sel.name : '—';
+  }
+
+  _instItem(inst, i) {
+    const nameEl = el('span', {
+      class: 'inst-name', text: inst.name, title: 'Doppelklick = umbenennen',
+      ondblclick: (e) => { e.stopPropagation(); this.renameInstrument(inst); }
+    });
+    return el('li', {
+      class: 'inst-item' + (inst.id === this.selectedInstrumentId ? ' active' : ''),
+      draggable: 'true',
+      title: 'In eine Arranger-Spur ziehen, um einen Block anzulegen',
+      ondragstart: (e) => {
+        e.dataTransfer.setData('application/x-trance-inst', inst.id);
+        e.dataTransfer.setData('text/plain', inst.name);
+        e.dataTransfer.effectAllowed = 'copy';
+        this.selectInstrument(inst.id);
+      },
+      onclick: () => { this.selectInstrument(inst.id); this.seq.preview(inst, 60, 0.5); }
+    }, [
+      el('span', { class: 'inst-num', text: String(i + 1).padStart(2, '0') }),
+      el('span', { class: 'inst-swatch', style: `background:${colorForIndex(i)}` }),
+      nameEl,
+      el('span', { class: 'inst-kind', text: inst.type }),
+      el('button', { title: 'Bearbeiten', text: '✎', onclick: (e) => { e.stopPropagation(); this.editInstrument(inst); } }),
+      el('button', { title: 'Duplizieren', text: '⧉', onclick: (e) => { e.stopPropagation(); this.duplicateInstrument(inst.id); } }),
+      el('button', { title: 'Löschen', text: '🗑', onclick: (e) => { e.stopPropagation(); if (confirm('Instrument „' + inst.name + '" löschen?')) this.removeInstrument(inst.id); } })
+    ]);
   }
 
   renameInstrument(inst) {
     const name = prompt('Neuer Name:', inst.name);
     if (name) { inst.name = name; this.renderInstrumentList(); this.renderMixer(); }
+  }
+
+  duplicateInstrument(id) {
+    const inst = this.getInstrument(id);
+    if (!inst) return;
+    const copy = cloneInstrument(inst);
+    const idx = this.song.instruments.findIndex((i) => i.id === id);
+    this.song.instruments.splice(idx + 1, 0, copy);
+    this.seq.ensureInstNodes();
+    this.selectInstrument(copy.id);
+    this.renderMixer();
+    this.setStatus('Kopie „' + copy.name + '" angelegt – jetzt bearbeitbar.');
+  }
+
+  editInstrument(inst) {
+    this.selectInstrument(inst.id);
+    this.showTab('samplemaker');
+    this.sampleMaker.editInstrument(inst);
+  }
+
+  addPresetInstrument(preset) {
+    const inst = createInstrument(preset);
+    this.addInstrument(inst);
+    this.selectInstrument(inst.id);
+    this.seq.preview(inst, 60, 0.5);
+    this.setStatus('„' + inst.name + '" hinzugefügt.');
+  }
+
+  /** Note von Klaviatur/Drum-Pad: im Tracker am Cursor schreiben, sonst nur vorhören. */
+  playNote(midi) {
+    if (this.viewMode === 'tracker') {
+      this.tracker.placeNote(midi);
+    } else {
+      const inst = this.selectedInstrument;
+      if (inst) this.seq.preview(inst, midi, 0.5);
+    }
   }
 
   // ---------- Mixer ----------

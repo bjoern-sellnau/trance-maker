@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { midiToFreq, midiToName } from '../js/util.js';
-import { defaultProject, emptyProject, createInstrument, createPattern, createClip, arrangementEndBeats, clipTriggers } from '../js/model.js';
+import { defaultProject, emptyProject, createInstrument, createPattern, createClip, arrangementEndBeats, clipTriggers, cloneInstrument, PRESETS, presetCategories } from '../js/model.js';
 import { encodeWAV, arrayBufferToBase64, base64ToArrayBuffer, audioBufferToBase64Wav } from '../js/audio/wav.js';
 import { serializeProject, deserializeProject } from '../js/project.js';
 
@@ -79,6 +79,31 @@ test('clipTriggers: füllt die Länge je nach Instrumenttyp', () => {
   const smp = createInstrument({ type: 'sample' }); // ohne Buffer
   tr = clipTriggers({ lengthBeats: 4 }, smp, 0.5);
   assert.equal(tr.length, 1);
+});
+
+test('cloneInstrument: neue ID, kopierte Parameter, Kopie-Name', () => {
+  const a = createInstrument({ type: 'synth', name: 'X', cutoff: 1234, drive: 0.4, category: 'Lead' });
+  const b = cloneInstrument(a);
+  assert.notEqual(b.id, a.id);
+  assert.equal(b.cutoff, 1234);
+  assert.equal(b.drive, 0.4);
+  assert.equal(b.category, 'Lead');
+  assert.match(b.name, /Kopie/);
+});
+
+test('PRESETS: Katalog mit Kategorien', () => {
+  assert.ok(PRESETS.length >= 20);
+  const cats = presetCategories();
+  assert.ok(cats.includes('Bass'));
+  assert.ok(cats.includes('Lead'));
+  assert.ok(cats.includes('Kick & Drums'));
+  // jedes Preset hat Name, Typ, Kategorie
+  for (const p of PRESETS) { assert.ok(p.name && p.type && p.category); }
+});
+
+test('createInstrument: Kategorie-Default', () => {
+  assert.equal(createInstrument({ type: 'synth' }).category, 'Sonstige');
+  assert.equal(createInstrument({ type: 'drum', category: 'Kick & Drums' }).category, 'Kick & Drums');
 });
 
 test('createClip: Defaults', () => {

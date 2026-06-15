@@ -2,7 +2,7 @@
 // Mikrofon-Aufnahme oder Datei-Import. Mit Wellenform-Vorschau.
 
 import { el, uid } from '../util.js';
-import { createInstrument } from '../model.js';
+import { createInstrument, PRESETS, presetCategories } from '../model.js';
 import { renderInstrumentToBuffer } from '../audio/instruments.js';
 import { getCtx } from '../audio/context.js';
 import { decodeAudioFile } from '../project.js';
@@ -35,6 +35,7 @@ export class SampleMakerUI {
     this.btnAdd = refs.btnAdd;
 
     this.mode = 'synth';
+    this.editTarget = null;   // bestehendes Instrument, das bearbeitet wird
     this.synthDraft = createInstrument({ type: 'synth', name: 'Mein Synth' });
     this.drumDraft = createInstrument({ type: 'drum', name: 'Meine Drum', drum: 'kick' });
     this.bake = false;
@@ -52,12 +53,28 @@ export class SampleMakerUI {
   }
 
   setMode(mode) {
+    this.editTarget = null;
     this.mode = mode;
-    this.subtabsEl.querySelectorAll('.subtab').forEach((b) => b.classList.toggle('active', b.dataset.sm === mode));
+    this.updateSubtabActive(mode);
     this.renderBody();
   }
 
-  activeDraft() { return this.mode === 'drum' ? this.drumDraft : this.synthDraft; }
+  updateSubtabActive(mode) {
+    this.subtabsEl.querySelectorAll('.subtab').forEach((b) => b.classList.toggle('active', b.dataset.sm === mode));
+  }
+
+  /** Ein bestehendes Instrument zum Bearbeiten laden. */
+  editInstrument(inst) {
+    this.editTarget = inst;
+    this.mode = inst.type === 'drum' ? 'drum' : inst.type === 'sample' ? 'sampleedit' : 'synth';
+    this.updateSubtabActive(this.mode);
+    this.renderBody();
+  }
+
+  activeDraft() {
+    if (this.editTarget) return this.editTarget;
+    return this.mode === 'drum' ? this.drumDraft : this.synthDraft;
+  }
 
   // ---------- UI-Bausteine ----------
   slider(label, obj, key, min, max, step, fmt) {
@@ -104,16 +121,60 @@ export class SampleMakerUI {
   renderBody() {
     const b = this.bodyEl;
     b.innerHTML = '';
+    if (this.editTarget) b.appendChild(this.editHeader());
     if (this.mode === 'synth') this.renderSynth(b);
     else if (this.mode === 'drum') this.renderDrum(b);
     else if (this.mode === 'mic') this.renderMic(b);
-    else this.renderImport(b);
+    else if (this.mode === 'import') this.renderImport(b);
+    else if (this.mode === 'presets') this.renderPresets(b);
+    else if (this.mode === 'sampleedit') this.renderSampleEdit(b);
+    this.updateActions();
     this.scheduleDraw();
   }
 
+  updateActions() {
+    const hide = this.mode === 'presets';
+    this.btnPreview.style.display = hide ? 'none' : '';
+    this.btnAdd.style.display = hide ? 'none' : '';
+    if (!hide) this.btnAdd.textContent = this.editTarget ? '＋ Als Kopie hinzufügen' : '＋ Als Instrument hinzufügen';
+  }
+
+  editHeader() {
+    return el('div', { class: 'sm-edit-head' }, [
+      el('span', { text: 'Bearbeite: ' }),
+      el('strong', { text: this.editTarget.name }),
+      el('button', {
+        class: 'pc-btn', text: '＋ Neu', title: 'Neues Instrument erstellen statt bearbeiten',
+        onclick: () => { this.editTarget = null; if (this.mode === 'sampleedit') this.mode = 'synth'; this.updateSubtabActive(this.mode); this.renderBody(); }
+      })
+    ]);
+  }
+
+  renderPresets(b) {
+    b.appendChild(el('div', { class: 'muted', text: 'Klick fügt das Preset zu deinen Instrumenten hinzu:' }));
+    for (const cat of presetCategories()) {
+      b.appendChild(el('div', { class: 'sm-cat', text: cat }));
+      const row = el('div', { class: 'row-flex' });
+      for (const p of PRESETS.filter((x) => x.category === cat)) {
+        row.appendChild(el('div', { class: 'chip', text: p.name, onclick: () => this.app.addPresetInstrument(p) }));
+      }
+      b.appendChild(row);
+    }
+  }
+
+  renderSampleEdit(b) {
+    const inst = this.editTarget;
+    if (!inst) return;
+    b.appendChild(this.textField('Name', inst.name, (v) => { inst.name = v; this.app.renderInstrumentList(); }));
+    b.appendChild(this.slider('Basis-Note (MIDI)', inst, 'baseNote', 24, 96, 1, (v) => Math.round(v)));
+    b.appendChild(this.slider('Pegel', inst, 'gain', 0, 1, 0.01, (v) => v.toFixed(2)));
+    b.appendChild(this.checkbox('Loop', inst, 'loop'));
+    if (!inst.buffer) b.appendChild(el('div', { class: 'muted', text: '(kein Sample-Buffer geladen)' }));
+  }
+
   renderSynth(b) {
-    const d = this.synthDraft;
-    b.appendChild(this.textField('Name', d.name, (v) => d.name = v));
+    const d = this.activeDraft();
+    b.appendChild(this.textField('Name', d.name, (v) => { d.name = v; if (this.editTarget) this.app.renderInstrumentList(); }));
     b.appendChild(this.select('Wellenform', d, 'wave', [
       { value: 'sine', label: 'Sinus' }, { value: 'sawtooth', label: 'Sägezahn' },
       { value: 'square', label: 'Rechteck' }, { value: 'triangle', label: 'Dreieck' }
@@ -133,8 +194,8 @@ export class SampleMakerUI {
   }
 
   renderDrum(b) {
-    const d = this.drumDraft;
-    b.appendChild(this.textField('Name', d.name, (v) => d.name = v));
+    const d = this.activeDraft();
+    b.appendChild(this.textField('Name', d.name, (v) => { d.name = v; if (this.editTarget) this.app.renderInstrumentList(); }));
     const chips = el('div', { class: 'row-flex' });
     [['kick', 'Kick'], ['snare', 'Snare'], ['hat', 'HiHat'], ['clap', 'Clap'], ['tom', 'Tom']].forEach(([val, lbl]) => {
       const c = el('div', { class: 'chip' + (d.drum === val ? ' active' : ''), text: lbl,
@@ -237,6 +298,9 @@ export class SampleMakerUI {
       const d = this.activeDraft();
       await this.app.seq.preview(d, 60, 0.7);
       this.drawDraft();
+    } else if (this.mode === 'sampleedit' && this.editTarget) {
+      const inst = this.editTarget;
+      await this.app.seq.preview(inst, inst.baseNote || 60, Math.min(3, inst.buffer ? inst.buffer.duration : 1));
     } else if (this.captured) {
       const buf = sliceBuffer(this.captured, this.trimStart, this.trimEnd);
       const temp = createInstrument({ type: 'sample', name: 'preview', baseNote: this.baseNote, loop: false });
@@ -246,6 +310,7 @@ export class SampleMakerUI {
   }
 
   async add() {
+    if (this.editTarget) { this.app.duplicateInstrument(this.editTarget.id); return; }
     let inst;
     if (this.mode === 'synth' || this.mode === 'drum') {
       const src = this.activeDraft();
@@ -275,7 +340,8 @@ export class SampleMakerUI {
 
   async draw() {
     if (this.mode === 'synth' || this.mode === 'drum') this.drawDraft();
-    else if (this.captured) this.drawWave(this.captured, this.trimStart, this.trimEnd);
+    else if (this.mode === 'sampleedit' && this.editTarget && this.editTarget.buffer) this.drawWave(this.editTarget.buffer, 0, 1);
+    else if ((this.mode === 'mic' || this.mode === 'import') && this.captured) this.drawWave(this.captured, this.trimStart, this.trimEnd);
     else this.clearCanvas();
   }
 

@@ -70,6 +70,8 @@
     <section class="panel side-panel">
       <div class="tabs" id="sideTabs">
         <button class="tab active" data-tab="instruments">Instrumente</button>
+        <button class="tab" data-tab="keyboard">Keyboard</button>
+        <button class="tab" data-tab="drumkit">Drumkit</button>
         <button class="tab" data-tab="samplemaker">Sample&nbsp;Maker</button>
         <button class="tab" data-tab="mixer">Mixer</button>
       </div>
@@ -88,6 +90,7 @@
           <button class="subtab" data-sm="drum">Drum</button>
           <button class="subtab" data-sm="mic">Mikrofon</button>
           <button class="subtab" data-sm="import">Import</button>
+          <button class="subtab" data-sm="presets">Presets</button>
         </div>
         <div class="sm-body" id="smBody"></div>
         <div class="waveform-box">
@@ -97,6 +100,23 @@
           <button id="btnPreview" class="p-btn">▶ Vorhören</button>
           <button id="btnAddInst" class="p-btn accent">＋ Als Instrument hinzufügen</button>
         </div>
+      </div>
+
+      <div class="tabpanel hidden" data-panel="keyboard">
+        <div class="kb-toolbar">
+          <span class="muted">Melodie spielen mit</span> <strong id="kbInstName">—</strong>
+          <span class="kb-oct">Oktave <button id="kbOctDown" class="pc-btn">−</button>
+            <span id="kbOctLabel">4</span>
+            <button id="kbOctUp" class="pc-btn">＋</button></span>
+        </div>
+        <div id="keyboard" class="keyboard" aria-label="Klaviatur"></div>
+        <div class="kb-hint muted">Im Tracker landen gespielte Noten am Cursor. Tasten am PC: <kbd>Z S X D C…</kbd> / <kbd>Q 2 W 3…</kbd></div>
+      </div>
+
+      <div class="tabpanel hidden" data-panel="drumkit">
+        <div class="kb-toolbar"><span class="muted">Drum-Kit — Pad antippen zum Spielen</span></div>
+        <div id="drumkit" class="drumkit" aria-label="Drum-Kit"></div>
+        <div class="kb-hint muted">Im Tracker landen Schläge am Cursor (Pad wählt das Instrument).</div>
       </div>
 
       <div class="tabpanel hidden" data-panel="mixer">

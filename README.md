@@ -88,15 +88,26 @@ Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 - **Import** – beliebige Audiodatei (WAV/MP3/OGG …) laden und als Sample nutzen.
   Du kannst Audiodateien auch **vom Desktop in das Fenster ziehen** (Drag & Drop) –
   sie werden automatisch als Sample-Instrumente importiert.
-
-Mitgeliefert sind **16 Instrumente**: klassische Drums (Kick, Clap, HiHats, Snare) und
-Synths (Bass, Lead, Pluck) sowie **Trance/Hardstyle-Presets** – Hardstyle Kick, Supersaw,
-Trance Pluck, Trance Pad, Hoover, Screech, Acid Bass und Sub Bass.
+- **Presets** – großer, nach **Kategorien** geordneter Katalog (Kick & Drums, Bass, Lead,
+  Pluck, Pad) zum Hinzufügen mit einem Klick.
 
 Jede Quelle zeigt eine **Wellenform-Vorschau**. Mit *„Als Sample backen"* wird ein
 Synth/Drum offline zu einem festen Sample gerendert; sonst wird es als spielbares
 Live-Instrument (tonhöhenabhängig) hinzugefügt. Samples lassen sich trimmen, loopen
 und über eine Basis-Note stimmen.
+
+### 🎛️ Instrumente verwalten
+Im Tab *Instrumente* ist alles nach **Kategorien** gruppiert. Pro Instrument:
+**✎ Bearbeiten** (lädt die Parameter live in den Sample Maker), **⧉ Duplizieren**
+(Kopie zum Weiterbasteln) und **🗑 Löschen**; Doppelklick auf den Namen = umbenennen.
+
+### 🎹 Keyboard & 🥁 Drum-Kit
+- **Keyboard** – eine On-Screen-Klaviatur (2 Oktaven, Oktavwahl) zum Einspielen von
+  **Melodien** mit dem ausgewählten Instrument.
+- **Drum-Kit** – Pads für alle Drum-Instrumente zum Spielen von **Beats**.
+
+Ist die **Tracker-Ansicht** aktiv, landen gespielte Noten/Schläge direkt am Cursor –
+so baust du Melodien und Drums Schritt für Schritt. Sonst dienen sie zum Vorhören.
 
 ### 🎚️ Mixer
 Pro Instrument ein Fader plus **Mute (M)** und **Solo (S)**.
@@ -132,6 +143,7 @@ trance-maker/
 │   └── ui/
 │       ├── tracker.js    # Tracker-Raster + Tastatur/Maus
 │       ├── arranger.js   # Arranger-Zeitleiste (Music-Maker-Ansicht)
+│       ├── keyboard.js   # Klaviatur (Melodien) + Drum-Kit-Pads
 │       └── samplemaker.js# Sample-Maker-Oberfläche + Wellenform
 └── test/core.test.js     # Unit-Tests (WAV, Base64, Modell, Serialisierung)
 ```
