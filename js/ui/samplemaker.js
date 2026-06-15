@@ -127,6 +127,7 @@ export class SampleMakerUI {
     b.appendChild(this.slider('Sub-Oszillator', d, 'sub', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.slider('Verstimmung', d, 'detune', -50, 50, 1, (v) => Math.round(v) + ' ct'));
     b.appendChild(this.checkbox('Fat (3 Osz.)', d, 'fat'));
+    b.appendChild(this.slider('Drive/Verzerrung', d, 'drive', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.slider('Pegel', d, 'gain', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.bakeToggle());
   }
@@ -145,6 +146,7 @@ export class SampleMakerUI {
     b.appendChild(this.slider('Decay', d, 'decay', 0.02, 1.2, 0.01, (v) => v.toFixed(2) + 's'));
     if (d.drum === 'kick') b.appendChild(this.slider('Click', d, 'click', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.slider('Cutoff (HiHat)', d, 'cutoff', 2000, 12000, 50, (v) => Math.round(v) + ' Hz'));
+    b.appendChild(this.slider('Drive/Verzerrung', d, 'drive', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.checkbox('Tonhöhe folgt Note', d, 'pitched'));
     b.appendChild(this.slider('Pegel', d, 'gain', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.bakeToggle());

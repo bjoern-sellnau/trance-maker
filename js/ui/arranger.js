@@ -68,10 +68,10 @@ export class ArrangerUI {
       `repeating-linear-gradient(90deg, rgba(56,189,248,.25) 0 2px, transparent 2px ${barW}px),` +
       `repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, transparent 1px ${this.laneHeight}px)`;
     bg.addEventListener('pointerdown', (e) => {
-      if (e.target !== bg) return;
-      const beat = Math.floor(e.offsetX / this.beatWidth);
+      if (e.target !== bg || e.button !== 0) return;
+      const startBeat = Math.floor(e.offsetX / this.beatWidth);
       const track = clamp(Math.floor(e.offsetY / this.laneHeight), 0, tracks - 1);
-      this.placeClip(track, beat);
+      this.startFrameDrag(e, bg, track, startBeat);
     });
     // Instrument aus der Liste hierher ziehen = Block anlegen
     const hasInst = (e) => Array.from(e.dataTransfer.types || []).includes('application/x-trance-inst');
@@ -136,18 +136,51 @@ export class ArrangerUI {
     return node;
   }
 
+  // Aufziehen eines Rahmens; das ausgewählte Sample füllt die gezogene Länge.
+  startFrameDrag(e, bg, track, startBeat) {
+    const rect = bg.getBoundingClientRect();
+    const frame = el('div', { class: 'arr-frame' });
+    frame.style.top = (track * this.laneHeight + this.clipPad / 2) + 'px';
+    frame.style.height = (this.laneHeight - this.clipPad) + 'px';
+    frame.style.left = (startBeat * this.beatWidth) + 'px';
+    frame.style.width = this.beatWidth + 'px';
+    bg.appendChild(frame);
+
+    let length = 1, moved = false;
+    const onMove = (ev) => {
+      if (Math.abs(ev.clientX - e.clientX) > 4) moved = true;
+      const curBeat = Math.round((ev.clientX - rect.left) / this.beatWidth);
+      length = clamp(curBeat - startBeat, 1, this.gridBeats() - startBeat);
+      frame.style.width = (length * this.beatWidth) + 'px';
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      frame.remove();
+      const inst = this.app.selectedInstrument;
+      if (!inst) { this.app.setStatus('Erst ein Instrument wählen.'); return; }
+      this.placeClipFor(inst.id, track, startBeat, moved ? length : undefined);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
   placeClip(track, beat) {
     const inst = this.app.selectedInstrument;
     if (!inst) { this.app.setStatus('Erst ein Instrument wählen.'); return; }
     this.placeClipFor(inst.id, track, beat);
   }
 
-  placeClipFor(instId, track, beat) {
+  defaultLength(inst) {
+    if (inst.type === 'sample' && inst.buffer) return Math.max(1, Math.round(inst.buffer.duration / this.spb));
+    if (inst.type === 'drum') return 1;
+    return 2;
+  }
+
+  placeClipFor(instId, track, beat, lengthOverride) {
     const inst = this.app.getInstrument(instId);
     if (!inst) return;
-    let lengthBeats = 2;
-    if (inst.type === 'sample' && inst.buffer) lengthBeats = Math.max(1, Math.round(inst.buffer.duration / this.spb));
-    else if (inst.type === 'drum') lengthBeats = 1;
+    const lengthBeats = lengthOverride != null ? Math.max(1, lengthOverride) : this.defaultLength(inst);
     const midi = inst.type === 'sample' ? (inst.baseNote ?? 60)
       : inst.type === 'drum' ? 60
         : 12 * (this.app.octave + 1);
