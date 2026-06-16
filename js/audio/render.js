@@ -2,7 +2,7 @@
 // mode: 'tracker' (Pattern/Order) oder 'arranger' (Music-Maker-Zeitleiste).
 
 import { triggerInstrument } from './instruments.js';
-import { arrangementEndBeats, BEATS_PER_BAR, clipTriggers } from '../model.js';
+import { arrangementEndBeats, BEATS_PER_BAR, clipNoteEvents } from '../model.js';
 
 export async function renderSong(app, { sampleRate = 44100, tail = 2.5, mode } = {}) {
   const song = app.project.song;
@@ -50,8 +50,8 @@ export async function renderSong(app, { sampleRate = 44100, tail = 2.5, mode } =
       const inst = app.getInstrument(clip.inst);
       if (!inst) continue;
       const target = nodes.get(inst.id) || master;
-      for (const tr of clipTriggers(clip, inst, spb)) {
-        triggerInstrument(offline, target, inst, clip.midi, (clip.startBeat + tr.offsetBeats) * spb, { duration: tr.durBeats * spb });
+      for (const ev of clipNoteEvents(clip, inst, spb)) {
+        triggerInstrument(offline, target, inst, ev.midi, (clip.startBeat + ev.offsetBeats) * spb, { duration: ev.durBeats * spb });
       }
     }
   } else {

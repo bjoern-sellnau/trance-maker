@@ -77,6 +77,13 @@ Transport (▶/Leertaste) und **WAV-Export** beziehen sich immer auf die **gerad
 Ansicht** – du kannst also Tracker *oder* Arranger abspielen und exportieren. Beide
 teilen sich dieselbe Instrument-/Sample-Bibliothek.
 
+### 🎼 Piano-Roll (Melodien wie in GarageBand)
+**Doppelklick auf einen Arranger-Block** (oder Button **＋ Melodie**) öffnet den
+**Piano-Roll**: Noten auf einer Klaviatur-Zeitleiste **zeichnen** (Klick), per Drag
+**verschieben**, an der rechten Kante in der **Länge** ändern und mit **Entf** löschen.
+Mit einstellbarem **Snap-Raster** (1 / ½ / ¼ / ⅛) und Vorhören. Ein Block mit Noten
+spielt diese Melodie ab (statt der Füllung); im Arranger sieht man eine Mini-Vorschau.
+
 ### 🔊 Sample Maker
 Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 
@@ -88,9 +95,9 @@ Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 - **Import** – beliebige Audiodatei (WAV/MP3/OGG …) laden und als Sample nutzen.
   Du kannst Audiodateien auch **vom Desktop in das Fenster ziehen** (Drag & Drop) –
   sie werden automatisch als Sample-Instrumente importiert.
-- **Presets** – **500+ Sounds**, nach **Kategorien** geordnet: Kick & Drums, Bass, Lead,
-  Pluck, Pad, **Keyboard** sowie je ~125 für **Trance, EDM, Rock und Metal**. Kategorie
-  im Dropdown wählen, Preset per Klick hinzufügen.
+- **Presets** – **550+ Sounds**, nach **Kategorien** geordnet: Kick & Drums, Bass, Lead,
+  Pluck, Pad, **Keyboard, Orchestra, Chiptune, Mallets** sowie je ~125 für **Trance, EDM,
+  Rock und Metal**. Kategorie im Dropdown wählen, Preset per Klick hinzufügen.
 
 Jede Quelle zeigt eine **Wellenform-Vorschau**. Mit *„Als Sample backen"* wird ein
 Synth/Drum offline zu einem festen Sample gerendert; sonst wird es als spielbares
@@ -148,6 +155,7 @@ trance-maker/
 │       ├── tracker.js    # Tracker-Raster + Tastatur/Maus
 │       ├── arranger.js   # Arranger-Zeitleiste (Music-Maker-Ansicht)
 │       ├── keyboard.js   # Klaviatur (Melodien) + Drum-Kit-Pads
+│       ├── pianoroll.js  # Piano-Roll-Editor (Melodien wie in GarageBand)
 │       └── samplemaker.js# Sample-Maker-Oberfläche + Wellenform
 └── test/core.test.js     # Unit-Tests (WAV, Base64, Modell, Serialisierung)
 ```

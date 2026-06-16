@@ -268,6 +268,28 @@ kbd { background: var(--bg3); border: 1px solid var(--line); border-radius: 4px;
 .pad-trigger:hover { background: var(--line); }
 .pad-trigger.hit { background: var(--pad); color: #06120c; transform: scale(.96); }
 
+/* Melodie-Vorschau in Arranger-Blöcken */
+.arr-notes { position: absolute; inset: 0; pointer-events: none; }
+.arr-note-mark { position: absolute; height: 2px; background: rgba(6,18,12,.7); border-radius: 1px; }
+
+/* Piano-Roll */
+.pr-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8,10,14,.8); z-index: 60; }
+.pr-overlay.hidden { display: none; }
+.pr-panel { width: min(1040px, 94vw); height: min(86vh, 760px); background: var(--panel); border: 1px solid var(--accent); border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.pr-header { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.pr-header .pr-tip { flex: 1; min-width: 120px; }
+.pr-header select, .pr-header input { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+.pr-body { flex: 1; overflow: auto; padding: 6px; }
+.pr-scroll { display: flex; min-width: max-content; }
+.pr-keys { position: sticky; left: 0; z-index: 2; width: 54px; flex: none; background: var(--bg2); border-right: 1px solid var(--line); }
+.pr-key { display: flex; align-items: center; justify-content: flex-end; padding-right: 4px; font-size: 8px; box-sizing: border-box; border-bottom: 1px solid rgba(0,0,0,.25); }
+.pr-key.white { background: #e9e9ee; color: #555; }
+.pr-key.black { background: #20242c; color: #8b93a3; }
+.pr-grid { position: relative; background-color: #0a0c10; }
+.pr-note { position: absolute; background: var(--accent); border: 1px solid #04110b; border-radius: 3px; cursor: grab; box-sizing: border-box; }
+.pr-note.sel { background: var(--accent2); box-shadow: 0 0 0 1px var(--text); z-index: 2; }
+.pr-note-resize { position: absolute; right: 0; top: 0; width: 7px; height: 100%; cursor: ew-resize; }
+
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
   .side-panel { min-height: 320px; }

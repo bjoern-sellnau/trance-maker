@@ -3,7 +3,7 @@
 
 import { getCtx, getMaster, ensureRunning } from './audio/context.js';
 import { triggerInstrument } from './audio/instruments.js';
-import { arrangementEndBeats, BEATS_PER_BAR, clipTriggers } from './model.js';
+import { arrangementEndBeats, BEATS_PER_BAR, clipNoteEvents } from './model.js';
 
 export class Sequencer {
   constructor(app) {
@@ -151,8 +151,8 @@ export class Sequencer {
     const events = [];
     for (const c of (arr.clips || [])) {
       const inst = this.app.getInstrument(c.inst);
-      for (const tr of clipTriggers(c, inst, spb)) {
-        events.push({ beat: c.startBeat + tr.offsetBeats, durBeats: tr.durBeats, inst: c.inst, midi: c.midi });
+      for (const ev of clipNoteEvents(c, inst, spb)) {
+        events.push({ beat: c.startBeat + ev.offsetBeats, durBeats: ev.durBeats, inst: c.inst, midi: ev.midi });
       }
     }
     events.sort((a, b) => a.beat - b.beat);

@@ -92,6 +92,19 @@ export function clipTriggers(clip, inst, spb) {
   return out;
 }
 
+/**
+ * Note-Events eines Clips inkl. Tonhöhe:
+ * - Hat der Clip eigene Noten (Piano-Roll-Melodie), werden diese verwendet.
+ * - Sonst Füll-Verhalten (clipTriggers) mit der Clip-Tonhöhe.
+ * Liefert [{ offsetBeats, durBeats, midi }].
+ */
+export function clipNoteEvents(clip, inst, spb) {
+  if (clip.notes && clip.notes.length) {
+    return clip.notes.map((n) => ({ offsetBeats: n.beat, durBeats: n.length, midi: n.midi }));
+  }
+  return clipTriggers(clip, inst, spb).map((t) => ({ offsetBeats: t.offsetBeats, durBeats: t.durBeats, midi: clip.midi }));
+}
+
 const setCell = (pat, row, ch, midi, instId) => { pat.cells[row][ch] = { midi, inst: instId }; };
 
 /** Preset-Katalog, nach Kategorien geordnet. */
@@ -136,7 +149,27 @@ export const PRESETS = [
   { category: 'Keyboard', name: 'Glocken', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.8, sustain: 0.0, release: 0.6, cutoff: 7000, q: 0.8, gain: 0.55 },
   { category: 'Keyboard', name: 'Synth Keys', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.3, cutoff: 5000, q: 1, gain: 0.4 },
   { category: 'Keyboard', name: 'Streicher', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.3, decay: 0.6, sustain: 0.85, release: 0.8, cutoff: 3500, q: 1, gain: 0.34 },
-  { category: 'Keyboard', name: 'Cembalo', type: 'synth', wave: 'square', attack: 0.001, decay: 0.4, sustain: 0.0, release: 0.3, cutoff: 5200, q: 1.2, gain: 0.5 }
+  { category: 'Keyboard', name: 'Cembalo', type: 'synth', wave: 'square', attack: 0.001, decay: 0.4, sustain: 0.0, release: 0.3, cutoff: 5200, q: 1.2, gain: 0.5 },
+  // Orchester
+  { category: 'Orchestra', name: 'Streicher Ensemble', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.25, decay: 0.5, sustain: 0.9, release: 0.8, cutoff: 3600, q: 0.9, gain: 0.32 },
+  { category: 'Orchestra', name: 'Pizzicato', type: 'synth', wave: 'triangle', attack: 0.002, decay: 0.2, sustain: 0.0, release: 0.15, cutoff: 4500, q: 1.5, gain: 0.55 },
+  { category: 'Orchestra', name: 'Blechbläser', type: 'synth', wave: 'sawtooth', attack: 0.03, decay: 0.2, sustain: 0.8, release: 0.25, cutoff: 3500, q: 1, drive: 0.15, gain: 0.4 },
+  { category: 'Orchestra', name: 'Horn', type: 'synth', wave: 'triangle', attack: 0.05, decay: 0.3, sustain: 0.85, release: 0.4, cutoff: 2800, q: 0.8, gain: 0.45 },
+  { category: 'Orchestra', name: 'Flöte', type: 'synth', wave: 'sine', attack: 0.06, decay: 0.2, sustain: 0.9, release: 0.3, cutoff: 6000, q: 0.7, gain: 0.5 },
+  { category: 'Orchestra', name: 'Cello', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.08, decay: 0.4, sustain: 0.85, release: 0.5, cutoff: 2000, q: 1, gain: 0.42 },
+  { category: 'Orchestra', name: 'Pauke', type: 'drum', drum: 'tom', tune: 90, decay: 0.5, pitched: true, gain: 0.8 },
+  // Chiptune
+  { category: 'Chiptune', name: 'Square Lead', type: 'synth', wave: 'square', attack: 0.001, decay: 0.05, sustain: 0.9, release: 0.05, cutoff: 8000, q: 0.7, gain: 0.4 },
+  { category: 'Chiptune', name: 'Triangle Lead', type: 'synth', wave: 'triangle', attack: 0.001, decay: 0.05, sustain: 0.9, release: 0.05, cutoff: 9000, q: 0.7, gain: 0.5 },
+  { category: 'Chiptune', name: 'Pulse Pluck', type: 'synth', wave: 'square', attack: 0.001, decay: 0.12, sustain: 0.0, release: 0.06, cutoff: 7000, q: 1, gain: 0.45 },
+  { category: 'Chiptune', name: 'NES Bass', type: 'synth', wave: 'triangle', attack: 0.001, decay: 0.1, sustain: 0.8, release: 0.05, cutoff: 2500, q: 0.7, gain: 0.6 },
+  { category: 'Chiptune', name: 'Arp Blip', type: 'synth', wave: 'square', attack: 0.001, decay: 0.06, sustain: 0.0, release: 0.04, cutoff: 9000, q: 1, gain: 0.4 },
+  // Mallets & Welt
+  { category: 'Mallets', name: 'Marimba', type: 'synth', wave: 'triangle', attack: 0.001, decay: 0.4, sustain: 0.0, release: 0.3, cutoff: 4000, q: 0.9, gain: 0.55 },
+  { category: 'Mallets', name: 'Kalimba', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.5, sustain: 0.0, release: 0.35, cutoff: 5000, q: 0.8, gain: 0.55 },
+  { category: 'Mallets', name: 'Spieluhr', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.7, sustain: 0.0, release: 0.5, cutoff: 8000, q: 0.8, gain: 0.5 },
+  { category: 'Mallets', name: 'Vibraphon', type: 'synth', wave: 'sine', attack: 0.002, decay: 0.8, sustain: 0.2, release: 0.5, cutoff: 5500, q: 0.8, gain: 0.5 },
+  { category: 'Mallets', name: 'Steel Drum', type: 'synth', wave: 'triangle', attack: 0.002, decay: 0.5, sustain: 0.1, release: 0.3, cutoff: 4500, q: 1, drive: 0.12, gain: 0.5 }
 ];
 
 // ---- Genre-Preset-Generator: ~500 Variationen (Trance / EDM / Rock / Metal) ----
@@ -289,6 +322,14 @@ export function defaultProject() {
   [[0, 33], [1, 33], [2, 36], [3, 33], [4, 40], [5, 33], [6, 36], [7, 31]]
     .forEach(([b, m]) => clips.push(createClip({ track: 2, startBeat: b, lengthBeats: 1, inst: bass.id, midi: m })));
   [[0, 69], [4, 72]].forEach(([b, m]) => clips.push(createClip({ track: 3, startBeat: b, lengthBeats: 4, inst: lead.id, midi: m })));
+  // Melodie-Clip (Piano-Roll) auf Spur 5
+  clips.push(createClip({
+    track: 4, startBeat: 0, lengthBeats: 4, inst: pluck.id, midi: 72, notes: [
+      { beat: 0, length: 0.5, midi: 72 }, { beat: 0.5, length: 0.5, midi: 74 },
+      { beat: 1, length: 0.5, midi: 76 }, { beat: 1.5, length: 0.5, midi: 74 },
+      { beat: 2, length: 1, midi: 72 }, { beat: 3, length: 1, midi: 67 }
+    ]
+  }));
   song.arrangement = { tracks: 8, bars: 8, clips };
 
   return { version: 1, song };
