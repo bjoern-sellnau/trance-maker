@@ -290,6 +290,12 @@ kbd { background: var(--bg3); border: 1px solid var(--line); border-radius: 4px;
 .pr-note.sel { background: var(--accent2); box-shadow: 0 0 0 1px var(--text); z-index: 2; }
 .pr-note-resize { position: absolute; right: 0; top: 0; width: 7px; height: 100%; cursor: ew-resize; }
 
+/* Öffnen-Menü (Datei / Demo-Songs) */
+.open-menu { position: fixed; z-index: 70; background: var(--bg2); border: 1px solid var(--accent); border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 3px; box-shadow: 0 12px 40px rgba(0,0,0,.55); min-width: 230px; }
+.om-item { text-align: left; background: var(--bg3); color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; cursor: pointer; font-size: 13px; }
+.om-item:hover { border-color: var(--accent); }
+.om-sep { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); padding: 6px 4px 2px; }
+
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
   .side-panel { min-height: 320px; }
