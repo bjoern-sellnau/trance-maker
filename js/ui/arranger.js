@@ -114,7 +114,8 @@ export class ArrangerUI {
     const top = clip.track * this.laneHeight + this.clipPad / 2;
     const width = Math.max(this.beatWidth, clip.lengthBeats * this.beatWidth) - 2;
     const height = this.laneHeight - this.clipPad;
-    const label = (inst ? inst.name : '??') + (inst && inst.type !== 'drum' ? ' · ' + midiToName(clip.midi) : '');
+    const isMelody = clip.notes && clip.notes.length;
+    const label = (inst ? inst.name : '??') + (isMelody ? ' · ♪' + clip.notes.length : (inst && inst.type !== 'drum' ? ' · ' + midiToName(clip.midi) : ''));
 
     const node = el('div', {
       class: 'arr-clip' + (clip.id === this.selectedId ? ' selected' : ''),
@@ -133,7 +134,35 @@ export class ArrangerUI {
       e.stopPropagation(); this.startDrag(e, clip, node, 'resize');
     });
     node.addEventListener('pointerdown', (e) => this.startDrag(e, clip, node, 'move'));
+    node.addEventListener('dblclick', (e) => { e.stopPropagation(); this.app.openPianoRoll(clip); });
+    if (isMelody) node.appendChild(this._noteMarks(clip, width, height));
     return node;
+  }
+
+  _noteMarks(clip, width, height) {
+    const wrap = el('div', { class: 'arr-notes' });
+    const ms = clip.notes.map((n) => n.midi);
+    const lo = Math.min(...ms), hi = Math.max(...ms);
+    const span = Math.max(1, hi - lo);
+    for (const n of clip.notes) {
+      const nx = (n.beat / clip.lengthBeats) * width;
+      const nw = Math.max(2, (n.length / clip.lengthBeats) * width);
+      const ny = (1 - (n.midi - lo) / span) * (height - 8) + 3;
+      wrap.appendChild(el('span', { class: 'arr-note-mark', style: `left:${nx}px;top:${ny}px;width:${nw}px` }));
+    }
+    return wrap;
+  }
+
+  addMelodyClip() {
+    let inst = this.app.selectedInstrument;
+    if (!inst || inst.type === 'drum') inst = this.app.song.instruments.find((i) => i.type !== 'drum') || inst;
+    if (!inst) { this.app.setStatus('Kein melodisches Instrument vorhanden.'); return; }
+    const clip = createClip({ track: 0, startBeat: 0, lengthBeats: 4, inst: inst.id, midi: 12 * (this.app.octave + 1), notes: [] });
+    this.arr.clips.push(clip);
+    this.selectedId = clip.id;
+    this.app.selectInstrument(inst.id);
+    this.render();
+    this.app.openPianoRoll(clip);
   }
 
   // Aufziehen eines Rahmens; das ausgewählte Sample füllt die gezogene Länge.

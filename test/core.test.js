@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { midiToFreq, midiToName } from '../js/util.js';
-import { defaultProject, emptyProject, createInstrument, createPattern, createClip, arrangementEndBeats, clipTriggers, cloneInstrument, PRESETS, presetCategories } from '../js/model.js';
+import { defaultProject, emptyProject, createInstrument, createPattern, createClip, arrangementEndBeats, clipTriggers, clipNoteEvents, cloneInstrument, PRESETS, presetCategories } from '../js/model.js';
 import { encodeWAV, arrayBufferToBase64, base64ToArrayBuffer, audioBufferToBase64Wav } from '../js/audio/wav.js';
 import { serializeProject, deserializeProject } from '../js/project.js';
 
@@ -94,7 +94,7 @@ test('cloneInstrument: neue ID, kopierte Parameter, Kopie-Name', () => {
 test('PRESETS: großer Katalog mit Genre-Kategorien', () => {
   assert.ok(PRESETS.length >= 500, 'mindestens 500 Presets, hat ' + PRESETS.length);
   const cats = presetCategories();
-  for (const g of ['Kick & Drums', 'Bass', 'Lead', 'Keyboard', 'Trance', 'EDM', 'Rock', 'Metal']) {
+  for (const g of ['Kick & Drums', 'Bass', 'Lead', 'Keyboard', 'Orchestra', 'Chiptune', 'Mallets', 'Trance', 'EDM', 'Rock', 'Metal']) {
     assert.ok(cats.includes(g), 'Kategorie fehlt: ' + g);
   }
   // jedes Preset hat Name/Typ/Kategorie und gültigen Typ
@@ -116,6 +116,19 @@ test('Alle Presets sind instanziierbar (keine NaN-Parameter)', () => {
 test('createInstrument: Kategorie-Default', () => {
   assert.equal(createInstrument({ type: 'synth' }).category, 'Sonstige');
   assert.equal(createInstrument({ type: 'drum', category: 'Kick & Drums' }).category, 'Kick & Drums');
+});
+
+test('clipNoteEvents: Melodie nutzt eigene Noten, sonst Füllung', () => {
+  const synth = createInstrument({ type: 'synth' });
+  const melody = { lengthBeats: 4, midi: 60, notes: [{ beat: 0, length: 1, midi: 64 }, { beat: 1, length: 1, midi: 67 }] };
+  let ev = clipNoteEvents(melody, synth, 0.5);
+  assert.equal(ev.length, 2);
+  assert.equal(ev[0].midi, 64);
+  assert.equal(ev[1].midi, 67);
+  const fill = { lengthBeats: 4, midi: 60 };
+  ev = clipNoteEvents(fill, synth, 0.5);
+  assert.equal(ev.length, 1);
+  assert.equal(ev[0].midi, 60);
 });
 
 test('createClip: Defaults', () => {

@@ -8,6 +8,7 @@ import { TrackerUI } from './ui/tracker.js';
 import { SampleMakerUI } from './ui/samplemaker.js';
 import { ArrangerUI } from './ui/arranger.js';
 import { KeyboardUI, DrumkitUI } from './ui/keyboard.js';
+import { PianoRollUI } from './ui/pianoroll.js';
 import { getAnalyser, ensureRunning } from './audio/context.js';
 import { saveProjectToFile, openProjectFromFile, exportSongWav, decodeAudioFile } from './project.js';
 
@@ -42,6 +43,7 @@ export class App {
     this.arranger = new ArrangerUI(this, $('#arranger'));
     this.keyboard = new KeyboardUI(this, $('#keyboard'));
     this.drumkit = new DrumkitUI(this, $('#drumkit'));
+    this.pianoRoll = new PianoRollUI(this, $('#pianoRoll'));
     $('#kbOctUp').addEventListener('click', () => { this.setOctave(this.octave + 1); this.keyboard.render(); });
     $('#kbOctDown').addEventListener('click', () => { this.setOctave(this.octave - 1); this.keyboard.render(); });
     this.seq.onArrPos = (beat) => this.arranger.setPlayhead(beat);
@@ -244,9 +246,13 @@ export class App {
     const tracks = el('input', { type: 'number', min: 1, max: 16, step: 1, value: arr.tracks, style: 'width:54px' });
     tracks.addEventListener('change', () => { arr.tracks = clamp(parseInt(tracks.value) || 8, 1, 16); this.arranger.render(); });
     c.appendChild(el('label', { class: 'muted', style: 'display:flex;gap:4px;align-items:center' }, ['Spuren', tracks]));
+    c.appendChild(el('button', { class: 'pc-btn', text: '＋ Melodie', title: 'Melodie-Block anlegen und im Piano-Roll öffnen',
+      onclick: () => this.arranger.addMelodyClip() }));
     c.appendChild(el('button', { class: 'pc-btn', text: 'Leeren', title: 'Alle Blöcke entfernen',
       onclick: () => { if (confirm('Arranger leeren?')) { arr.clips = []; this.arranger.render(); } } }));
   }
+
+  openPianoRoll(clip) { this.pianoRoll.open(clip); }
 
   // ---------- Instrumente ----------
   setOctave(o) {
