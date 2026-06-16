@@ -311,10 +311,7 @@ export class App {
   }
 
   _instItem(inst, i) {
-    const nameEl = el('span', {
-      class: 'inst-name', text: inst.name, title: 'Doppelklick = umbenennen',
-      ondblclick: (e) => { e.stopPropagation(); this.renameInstrument(inst); }
-    });
+    const nameEl = el('span', { class: 'inst-name', text: inst.name, title: inst.name });
     return el('li', {
       class: 'inst-item' + (inst.id === this.selectedInstrumentId ? ' active' : ''),
       draggable: 'true',
@@ -331,6 +328,7 @@ export class App {
       el('span', { class: 'inst-swatch', style: `background:${colorForIndex(i)}` }),
       nameEl,
       el('span', { class: 'inst-kind', text: inst.type }),
+      el('button', { title: 'Umbenennen', text: '🏷', onclick: (e) => { e.stopPropagation(); this.renameInstrument(inst); } }),
       el('button', { title: 'Bearbeiten', text: '✎', onclick: (e) => { e.stopPropagation(); this.editInstrument(inst); } }),
       el('button', { title: 'Duplizieren', text: '⧉', onclick: (e) => { e.stopPropagation(); this.duplicateInstrument(inst.id); } }),
       el('button', { title: 'Löschen', text: '🗑', onclick: (e) => { e.stopPropagation(); if (confirm('Instrument „' + inst.name + '" löschen?')) this.removeInstrument(inst.id); } })
