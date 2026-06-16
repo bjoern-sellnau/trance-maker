@@ -71,7 +71,10 @@ Die loop-/blockbasierte Ansicht wie bei Magix Music Maker ist die **Startansicht
   pro Beat, z. B. für Hardstyle-Kick-Rolls).
 - Blöcke per **Drag verschieben**, an der **rechten Kante in der Länge ziehen**,
   mit **✕** oder **Entf** löschen; **Leeren**-Button räumt alles ab.
-- Eigener **Playhead**; die Wiedergabe loopt die Arrangement-Länge.
+- **Zoom / Fit**, **Playhead per Klick aufs Lineal** verschieben (Wiedergabe startet dort),
+  **Zeitanzeige** (aktuell / gesamt) und **Song-Name** oben in der Leiste.
+- Geladene **Demo-Songs** bestehen aus 8-Takt-**Blöcken** pro Spur – per **Doppelklick**
+  öffnet sich ein Block im Piano-Roll, sodass man sieht, wie der Song gebaut ist.
 
 Transport (▶/Leertaste) und **WAV-Export** beziehen sich immer auf die **gerade aktive
 Ansicht** – du kannst also Tracker *oder* Arranger abspielen und exportieren. Beide

@@ -9,6 +9,8 @@ export class ArrangerUI {
     this.app = app;
     this.root = root;
     this.beatWidth = 30;
+    this.minBeatW = 1;
+    this.maxBeatW = 80;
     this.laneHeight = 44;
     this.rulerH = 22;
     this.labelW = 64;
@@ -42,11 +44,13 @@ export class ArrangerUI {
 
     const grid = el('div', { class: 'arr-grid', style: `width:${W}px;height:${H}px` });
 
-    // Lineal (Takte)
-    const ruler = el('div', { class: 'arr-ruler', style: `left:${this.labelW}px;height:${this.rulerH}px;width:${gridBeats * this.beatWidth}px` });
+    // Lineal (Takte) – Klick setzt den Playhead
+    const ruler = el('div', { class: 'arr-ruler', title: 'Klick = Playhead/Start setzen', style: `left:${this.labelW}px;height:${this.rulerH}px;width:${gridBeats * this.beatWidth}px` });
+    const labelEvery = barW < 26 ? Math.ceil(26 / barW) : 1;
     for (let bar = 0; bar < gridBeats / BEATS_PER_BAR; bar++) {
-      ruler.appendChild(el('span', { class: 'arr-bar-num', style: `left:${bar * barW}px`, text: String(bar + 1) }));
+      if (bar % labelEvery === 0) ruler.appendChild(el('span', { class: 'arr-bar-num', style: `left:${bar * barW}px`, text: String(bar + 1) }));
     }
+    ruler.addEventListener('pointerdown', (e) => this.app.seekTo(e.offsetX / this.beatWidth));
     grid.appendChild(ruler);
 
     // Spur-Beschriftungen (links, klebend)
@@ -100,11 +104,29 @@ export class ArrangerUI {
     grid.appendChild(layer);
     this._layer = layer;
 
-    // Playhead
-    this._playhead = el('div', { class: 'arr-playhead', style: `left:${this.labelW}px;top:${this.rulerH}px;height:${tracks * this.laneHeight}px;display:none` });
+    // Playhead (zeigt im Stopp-Zustand die Start-/Seek-Position)
+    this._playhead = el('div', { class: 'arr-playhead', style: `top:${this.rulerH}px;height:${tracks * this.laneHeight}px` });
     grid.appendChild(this._playhead);
+    this.setPlayhead(-1);
 
     root.appendChild(grid);
+  }
+
+  setPlayhead(beat) {
+    if (!this._playhead) return;
+    const pos = (beat == null || beat < 0) ? (this.app.seekBeat || 0) : beat;
+    this._playhead.style.left = (this.labelW + pos * this.beatWidth) + 'px';
+  }
+
+  setZoom(bw) { this.beatWidth = clamp(Math.round(bw), this.minBeatW, this.maxBeatW); this.render(); }
+  zoomBy(f) { this.setZoom(this.beatWidth * f); }
+
+  fit() {
+    const wrap = this.root.parentElement;
+    if (!wrap) return;
+    const avail = wrap.clientWidth - this.labelW - 10;
+    const gb = this.gridBeats();
+    if (gb > 0 && avail > 0) this.setZoom(Math.max(this.minBeatW, Math.floor(avail / gb)));
   }
 
   makeClip(clip) {
@@ -256,12 +278,14 @@ export class ArrangerUI {
     const onUp = () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
-      if (!moved && mode === 'move') {
-        // einfacher Klick = auswählen + vorhören
+      if (moved) { this.render(); return; }
+      // einfacher Klick: Auswahl ohne Re-Render (sonst bricht der Doppelklick zum Piano-Roll)
+      if (this._layer) this._layer.querySelectorAll('.arr-clip.selected').forEach((n) => { if (n !== node) n.classList.remove('selected'); });
+      node.classList.add('selected');
+      if (mode === 'move') {
         const inst = this.app.getInstrument(clip.inst);
         if (inst) this.app.seq.preview(inst, clip.midi, Math.min(2, clip.lengthBeats * this.spb));
       }
-      this.render();
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);

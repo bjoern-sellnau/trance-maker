@@ -109,10 +109,20 @@ function buildSong(cfg) {
     if (s.pad && I.pad && cfg.pad) for (const n of cfg.pad(bar, root, scale)) add('pad', n);
   }
 
+  // Pro Spur in 8-Takt-Blöcke aufteilen (lesbares Arrangement, im Piano-Roll editierbar)
+  const BLOCK = 32; // 8 Takte * 4 Beats
   let track = 0;
   const clips = [];
   for (const k of LANE_ORDER) {
-    if (I[k] && lanes[k] && lanes[k].length) clips.push(createClip({ track: track++, startBeat: 0, lengthBeats: totalBeats, inst: I[k].id, midi: 60, notes: lanes[k] }));
+    if (!(I[k] && lanes[k] && lanes[k].length)) continue;
+    const notes = lanes[k].slice().sort((a, b) => a.beat - b.beat);
+    for (let bs = 0; bs < totalBeats; bs += BLOCK) {
+      const be = Math.min(bs + BLOCK, totalBeats);
+      const inBlock = [];
+      for (const n of notes) if (n.beat >= bs && n.beat < be) inBlock.push({ beat: +(n.beat - bs).toFixed(3), length: n.length, midi: n.midi });
+      if (inBlock.length) clips.push(createClip({ track, startBeat: bs, lengthBeats: be - bs, inst: I[k].id, midi: 60, notes: inBlock }));
+    }
+    track++;
   }
   song.arrangement = { tracks: Math.max(8, track), bars, clips };
   song.patterns = [createPattern('Pattern', song.channels, 16)];
