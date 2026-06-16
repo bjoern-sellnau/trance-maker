@@ -1,7 +1,7 @@
 // Zentrale App: Zustand + Verdrahtung aller Bedienelemente.
 
 import { $, el, colorForIndex, clamp } from './util.js';
-import { defaultProject, emptyProject, createPattern, createInstrument, cloneInstrument } from './model.js';
+import { defaultProject, emptyProject, createPattern, createInstrument, cloneInstrument, arrangementEndBeats, BEATS_PER_BAR } from './model.js';
 import { Sequencer } from './sequencer.js';
 import { MicRecorder } from './audio/recorder.js';
 import { TrackerUI } from './ui/tracker.js';
@@ -22,6 +22,7 @@ export class App {
     this.viewMode = 'arranger';       // 'tracker' | 'arranger' (Arranger ist Standard)
     this.mutedChannels = new Set();
     this.octave = 4;
+    this.seekBeat = 0;                // Start-/Playhead-Position im Arranger
     this.drumkitPads = null;          // belegbare Drum-Kit-Pads (Instrument-IDs)
     this.selectedInstrumentId = this.project.song.instruments[0]?.id || null;
     this.seq = new Sequencer(this);
@@ -47,9 +48,10 @@ export class App {
     this.pianoRoll = new PianoRollUI(this, $('#pianoRoll'));
     $('#kbOctUp').addEventListener('click', () => { this.setOctave(this.octave + 1); this.keyboard.render(); });
     $('#kbOctDown').addEventListener('click', () => { this.setOctave(this.octave - 1); this.keyboard.render(); });
-    this.seq.onArrPos = (beat) => this.arranger.setPlayhead(beat);
+    this.seq.onArrPos = (beat) => { this.arranger.setPlayhead(beat); this.updateArrTime(beat < 0 ? this.seekBeat : beat); };
 
     this.seq.onStep = (patternIndex, row) => {
+      if (row >= 0) $('#timeDisplay').textContent = 'Pat ' + letter(patternIndex) + ' · Reihe ' + (row + 1);
       if (this.seq.playing && this.seq.followSong && patternIndex !== this.currentPatternIndex) {
         this.currentPatternIndex = patternIndex;
         this.tracker.render();
@@ -130,6 +132,8 @@ export class App {
     bpm.addEventListener('input', () => { this.song.bpm = clamp(parseInt(bpm.value) || 138, 40, 300); });
     const rpb = $('#inpRpb'); rpb.value = this.song.rowsPerBeat;
     rpb.addEventListener('input', () => { this.song.rowsPerBeat = clamp(parseInt(rpb.value) || 4, 1, 8); this.tracker.render(); });
+    const title = $('#songTitle'); title.value = this.song.title || '';
+    title.addEventListener('input', () => { this.song.title = title.value; });
   }
 
   async togglePlay() {
@@ -208,7 +212,10 @@ export class App {
     try {
       const project = buildDemo(id);
       this.loadProject(project);
-      this.setStatus('Demo geladen: ' + project.song.title + ' (' + project.song.arrangement.bars + ' Takte)');
+      this.viewMode = 'arranger';
+      this.applyView();
+      this.arranger.fit();
+      this.setStatus('Demo geladen: ' + project.song.title + ' (' + project.song.arrangement.bars + ' Takte) — ganzer Song eingepasst');
     } catch (err) {
       this.setStatus('Demo fehlgeschlagen: ' + err.message);
     }
@@ -218,15 +225,19 @@ export class App {
     this.stop();
     this.project = project;
     this.currentPatternIndex = 0;
+    this.seekBeat = 0;
+    this.drumkitPads = null;
     this.mutedChannels = new Set();
     this.selectedInstrumentId = this.song.instruments[0]?.id || null;
     $('#inpBpm').value = this.song.bpm;
     $('#inpRpb').value = this.song.rowsPerBeat;
+    const title = $('#songTitle'); if (title) title.value = this.song.title || '';
     this.seq.instNodes.forEach((n) => n.disconnect());
     this.seq.instNodes.clear();
     this.seq.ensureInstNodes();
     if (this.arranger) this.arranger.selectedId = null;
     this.renderAll();
+    this.updateArrTime(0);
   }
 
   // ---------- Tabs ----------
@@ -266,7 +277,7 @@ export class App {
     $('#arrangerView').classList.toggle('hidden', view !== 'arranger');
     $('#patternControls').classList.toggle('hidden', view !== 'tracker');
     $('#arrangerControls').classList.toggle('hidden', view !== 'arranger');
-    if (view === 'arranger') { this.arranger.render(); $('#arranger').focus(); }
+    if (view === 'arranger') { this.arranger.render(); this.updateArrTime(this.seekBeat); $('#arranger').focus(); }
     else { this.tracker.render(); $('#tracker').focus(); }
   }
 
@@ -282,11 +293,39 @@ export class App {
     c.appendChild(el('label', { class: 'muted', style: 'display:flex;gap:4px;align-items:center' }, ['Spuren', tracks]));
     c.appendChild(el('button', { class: 'pc-btn', text: '＋ Melodie', title: 'Melodie-Block anlegen und im Piano-Roll öffnen',
       onclick: () => this.arranger.addMelodyClip() }));
+    c.appendChild(el('button', { class: 'pc-btn', text: '🔍−', title: 'Rauszoomen', onclick: () => this.arranger.zoomBy(0.6) }));
+    c.appendChild(el('button', { class: 'pc-btn', text: '🔍+', title: 'Reinzoomen', onclick: () => this.arranger.zoomBy(1.6) }));
+    c.appendChild(el('button', { class: 'pc-btn', text: 'Fit', title: 'Ganzen Song einpassen', onclick: () => this.arranger.fit() }));
     c.appendChild(el('button', { class: 'pc-btn', text: 'Leeren', title: 'Alle Blöcke entfernen',
       onclick: () => { if (confirm('Arranger leeren?')) { arr.clips = []; this.arranger.render(); } } }));
   }
 
   openPianoRoll(clip) { this.pianoRoll.open(clip); }
+
+  // Playhead/Startposition setzen (Klick aufs Lineal)
+  seekTo(beat) {
+    this.seekBeat = Math.max(0, beat);
+    this.arranger.setPlayhead(this.seekBeat);
+    this.updateArrTime(this.seekBeat);
+    if (this.seq.playing && this.viewMode === 'arranger') {
+      this.seq.stop();
+      this.seq.play('arranger', false).then(() => $('#btnPlay').classList.add('active'));
+    }
+  }
+
+  fmtTime(sec) {
+    sec = Math.max(0, sec);
+    const m = Math.floor(sec / 60);
+    const s = Math.round(sec % 60);
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  updateArrTime(beat) {
+    const bpm = this.song.bpm || 138;
+    const total = Math.max(arrangementEndBeats(this.song.arrangement), BEATS_PER_BAR);
+    const el2 = $('#timeDisplay');
+    if (el2) el2.textContent = this.fmtTime((beat || 0) * 60 / bpm) + ' / ' + this.fmtTime(total * 60 / bpm);
+  }
 
   // ---------- Instrumente ----------
   setOctave(o) {
