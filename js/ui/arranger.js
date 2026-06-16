@@ -141,10 +141,13 @@ export class ArrangerUI {
 
   _noteMarks(clip, width, height) {
     const wrap = el('div', { class: 'arr-notes' });
-    const ms = clip.notes.map((n) => n.midi);
-    const lo = Math.min(...ms), hi = Math.max(...ms);
+    const notes = clip.notes;
+    let lo = Infinity, hi = -Infinity;
+    for (const n of notes) { if (n.midi < lo) lo = n.midi; if (n.midi > hi) hi = n.midi; }
     const span = Math.max(1, hi - lo);
-    for (const n of clip.notes) {
+    const stride = Math.max(1, Math.ceil(notes.length / 150)); // bei vielen Noten ausdünnen
+    for (let i = 0; i < notes.length; i += stride) {
+      const n = notes[i];
       const nx = (n.beat / clip.lengthBeats) * width;
       const nw = Math.max(2, (n.length / clip.lengthBeats) * width);
       const ny = (1 - (n.midi - lo) / span) * (height - 8) + 3;

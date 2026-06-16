@@ -95,9 +95,10 @@ Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 - **Import** – beliebige Audiodatei (WAV/MP3/OGG …) laden und als Sample nutzen.
   Du kannst Audiodateien auch **vom Desktop in das Fenster ziehen** (Drag & Drop) –
   sie werden automatisch als Sample-Instrumente importiert.
-- **Presets** – **550+ Sounds**, nach **Kategorien** geordnet: Kick & Drums, Bass, Lead,
-  Pluck, Pad, **Keyboard, Orchestra, Chiptune, Mallets** sowie je ~125 für **Trance, EDM,
-  Rock und Metal**. Kategorie im Dropdown wählen, Preset per Klick hinzufügen.
+- **Presets** – **620+ Sounds**, nach **Kategorien** geordnet: Kick & Drums, Bass, Lead,
+  Pluck, Pad, **Keyboard, Orchestra, Chiptune, Mallets, Techno, House, Dubstep, DnB,
+  Ambient, Brass & Wind, World, FX** sowie je ~125 für **Trance, EDM, Rock und Metal**.
+  Kategorie im Dropdown wählen, Preset per Klick hinzufügen.
 
 Jede Quelle zeigt eine **Wellenform-Vorschau**. Mit *„Als Sample backen"* wird ein
 Synth/Drum offline zu einem festen Sample gerendert; sonst wird es als spielbares
@@ -124,7 +125,10 @@ so baust du Melodien und Drums Schritt für Schritt. Sonst dienen sie zum Vorhö
 Pro Instrument ein Fader plus **Mute (M)** und **Solo (S)**.
 
 ### 💾 Import / Export
-- **Speichern / Öffnen** als `.trance`-Datei (JSON). **Selbstständig** – eigene Samples
+- **Öffnen** zeigt ein Menü: eigene **`.trance`-Datei laden** oder einen von **6 fertigen
+  Demo-Songs** öffnen — Trance, Hardstyle, EDM, 90s Happy Hardcore, 90s Trance und
+  90s Eurodance (jeweils komplett auskomponiert in passender Länge, 2½–6 Minuten).
+- **Speichern** als `.trance`-Datei (JSON). **Selbstständig** – eigene Samples
   werden als Base64-WAV eingebettet, sodass ein Projekt alles Nötige enthält.
 - **WAV-Export**: Der komplette Song wird offline (schneller als Echtzeit) gerendert
   und als 16-Bit-Stereo-WAV heruntergeladen, inkl. Schutz-Normalisierung gegen Clipping.
@@ -141,7 +145,8 @@ trance-maker/
 ├── js/
 │   ├── main.js           # Einstiegspunkt
 │   ├── app.js            # zentrale App-Logik & Verdrahtung
-│   ├── model.js          # Datenmodell + Standardprojekt (Demo-Beat)
+│   ├── model.js          # Datenmodell, Presets + Standardprojekt
+│   ├── demos.js          # 6 algorithmisch erzeugte Demo-Songs
 │   ├── sequencer.js      # Look-Ahead-Scheduler (Live-Wiedergabe) + Mixer-Routing
 │   ├── project.js        # Speichern/Laden (.trance) + WAV-Export
 │   ├── util.js           # Hilfsfunktionen

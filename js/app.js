@@ -11,6 +11,7 @@ import { KeyboardUI, DrumkitUI } from './ui/keyboard.js';
 import { PianoRollUI } from './ui/pianoroll.js';
 import { getAnalyser, ensureRunning } from './audio/context.js';
 import { saveProjectToFile, openProjectFromFile, exportSongWav, decodeAudioFile } from './project.js';
+import { buildDemo, DEMO_LIST } from './demos.js';
 
 const letter = (i) => String.fromCharCode(65 + i);
 
@@ -155,7 +156,7 @@ export class App {
     });
     $('#btnSave').addEventListener('click', () => { saveProjectToFile(this.project); this.setStatus('Projekt gespeichert (.trance).'); });
     const fileOpen = $('#fileOpen');
-    $('#btnOpen').addEventListener('click', () => fileOpen.click());
+    $('#btnOpen').addEventListener('click', () => this.showOpenMenu());
     fileOpen.addEventListener('change', async () => {
       if (!fileOpen.files[0]) return;
       try {
@@ -178,6 +179,39 @@ export class App {
       }
       btn.disabled = false;
     });
+  }
+
+  // ---------- Öffnen-Menü (Datei laden oder Demo-Song) ----------
+  showOpenMenu() {
+    if (this._openMenu) { this.closeOpenMenu(); return; }
+    const btn = $('#btnOpen');
+    const r = btn.getBoundingClientRect();
+    const menu = el('div', { class: 'open-menu', style: `left:${r.left}px;top:${r.bottom + 4}px` });
+    menu.appendChild(el('button', { class: 'om-item', text: '📂 Datei laden…', onclick: () => { this.closeOpenMenu(); $('#fileOpen').click(); } }));
+    menu.appendChild(el('div', { class: 'om-sep', text: 'Demo-Songs' }));
+    for (const d of DEMO_LIST) {
+      menu.appendChild(el('button', { class: 'om-item', text: d.label, onclick: () => { this.closeOpenMenu(); this.loadDemo(d.id); } }));
+    }
+    document.body.appendChild(menu);
+    this._openMenu = menu;
+    this._omClose = (ev) => { if (!menu.contains(ev.target) && ev.target !== btn) this.closeOpenMenu(); };
+    setTimeout(() => document.addEventListener('pointerdown', this._omClose, true), 0);
+  }
+
+  closeOpenMenu() {
+    if (this._openMenu) { this._openMenu.remove(); this._openMenu = null; }
+    if (this._omClose) { document.removeEventListener('pointerdown', this._omClose, true); this._omClose = null; }
+  }
+
+  loadDemo(id) {
+    this.setStatus('Lade Demo-Song…');
+    try {
+      const project = buildDemo(id);
+      this.loadProject(project);
+      this.setStatus('Demo geladen: ' + project.song.title + ' (' + project.song.arrangement.bars + ' Takte)');
+    } catch (err) {
+      this.setStatus('Demo fehlgeschlagen: ' + err.message);
+    }
   }
 
   loadProject(project) {

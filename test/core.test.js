@@ -6,6 +6,7 @@ import { midiToFreq, midiToName } from '../js/util.js';
 import { defaultProject, emptyProject, createInstrument, createPattern, createClip, arrangementEndBeats, clipTriggers, clipNoteEvents, cloneInstrument, PRESETS, presetCategories } from '../js/model.js';
 import { encodeWAV, arrayBufferToBase64, base64ToArrayBuffer, audioBufferToBase64Wav } from '../js/audio/wav.js';
 import { serializeProject, deserializeProject } from '../js/project.js';
+import { buildDemo, DEMO_LIST } from '../js/demos.js';
 
 // ---- util ----
 test('midiToFreq: A4 = 440 Hz', () => {
@@ -186,6 +187,34 @@ test('serialize -> deserialize erhält Song-Struktur', async () => {
   // Arrangement übersteht den Roundtrip
   assert.equal(round.song.arrangement.clips.length, project.song.arrangement.clips.length);
   assert.equal(round.song.arrangement.clips[0].inst, project.song.arrangement.clips[0].inst);
+});
+
+// ---- Demo-Songs ----
+test('Demo-Songs: alle 6 baubar mit Inhalt', () => {
+  assert.equal(DEMO_LIST.length, 6);
+  for (const d of DEMO_LIST) {
+    const { song } = buildDemo(d.id);
+    assert.ok(song.instruments.length >= 4, d.id + ' Instrumente');
+    assert.ok(song.arrangement.clips.length >= 4, d.id + ' Clips');
+    assert.ok(song.arrangement.bars >= 16, d.id + ' Takte');
+    const notes = song.arrangement.clips.reduce((s, c) => s + (c.notes ? c.notes.length : 0), 0);
+    assert.ok(notes > 50, d.id + ' Noten=' + notes);
+  }
+});
+
+test('Demo-Songs: Dauer im Zielbereich', () => {
+  const dur = (id) => { const { song } = buildDemo(id); return song.arrangement.bars * 240 / song.bpm; };
+  assert.ok(dur('trance') >= 120 && dur('trance') <= 200, 'trance');
+  assert.ok(dur('hardstyle') >= 240 && dur('hardstyle') <= 320, 'hardstyle');
+  assert.ok(dur('trance90s') >= 320 && dur('trance90s') <= 400, '90s trance');
+});
+
+test('Demo-Songs: serialisierbar (Melodie-Noten überstehen Roundtrip)', async () => {
+  const project = buildDemo('eurodance');
+  const round = await deserializeProject(serializeProject(project));
+  assert.equal(round.song.arrangement.clips.length, project.song.arrangement.clips.length);
+  const c = round.song.arrangement.clips.find((x) => x.notes && x.notes.length);
+  assert.ok(c && c.notes.length > 0);
 });
 
 test('serialize: Nicht-Sample-Instrumente haben kein sampleData', () => {
