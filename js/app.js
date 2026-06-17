@@ -304,7 +304,8 @@ export class App {
 
   // Playhead/Startposition setzen (Klick aufs Lineal)
   seekTo(beat) {
-    this.seekBeat = Math.max(0, beat);
+    const end = Math.max(arrangementEndBeats(this.song.arrangement), BEATS_PER_BAR);
+    this.seekBeat = clamp(beat, 0, end);
     this.arranger.setPlayhead(this.seekBeat);
     this.updateArrTime(this.seekBeat);
     if (this.seq.playing && this.viewMode === 'arranger') {

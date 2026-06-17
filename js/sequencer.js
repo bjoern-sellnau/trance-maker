@@ -91,10 +91,13 @@ export class Sequencer {
     if (this.mode === 'arranger') {
       this._spb = 60 / this.song.bpm;
       this._buildArrEvents();
-      this._arrIdx = 0;
+      // ab der Seek-/Playhead-Position starten
+      const sb = Math.min(Math.max(0, this.app.seekBeat || 0), Math.max(0, this._arrLenBeats - 0.001));
       this._arrVoices = [];
-      this._arrOrigin = ctx.currentTime + 0.08;
+      this._arrOrigin = ctx.currentTime + 0.08 - sb * this._spb;
       this._arrLoopStart = this._arrOrigin;
+      this._arrIdx = 0;
+      while (this._arrIdx < this._arrEvents.length && this._arrEvents[this._arrIdx].beat < sb) this._arrIdx++;
     } else {
       this.followSong = !!followSong;
       this.orderIdx = followSong ? 0 : this.app.currentPatternIndex;
