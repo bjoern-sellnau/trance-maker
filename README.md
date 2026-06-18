@@ -71,6 +71,8 @@ Die loop-/blockbasierte Ansicht wie bei Magix Music Maker ist die **Startansicht
   pro Beat, z. B. für Hardstyle-Kick-Rolls).
 - Blöcke per **Drag verschieben**, an der **rechten Kante in der Länge ziehen**,
   mit **✕** oder **Entf** löschen; **Leeren**-Button räumt alles ab.
+- **Raster wählbar** (1 Takt / 1 Beat / ½ / ¼ / ⅛) – für **kleinere Sound-Bausteine**:
+  Platzieren, Aufziehen, Verschieben und Größe rasten auf den gewählten Wert.
 - **Zoom / Fit**, **Playhead per Klick aufs Lineal** verschieben (Wiedergabe startet dort),
   **Zeitanzeige** (aktuell / gesamt) und **Song-Name** oben in der Leiste.
 - Geladene **Demo-Songs** bestehen aus 8-Takt-**Blöcken** pro Spur – per **Doppelklick**
