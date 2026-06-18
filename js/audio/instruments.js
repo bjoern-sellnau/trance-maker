@@ -2,7 +2,7 @@
 // triggerInstrument(ctx, dest, inst, midi, time, opts) -> Handle { stop(t), endTime }
 // Funktioniert mit AudioContext UND OfflineAudioContext (gleiche API).
 
-import { midiToFreq } from '../util.js';
+import { midiToFreq, clamp } from '../util.js';
 
 const noiseCache = new WeakMap();
 function noiseBuffer(ctx) {
@@ -77,31 +77,42 @@ function triggerSynth(ctx, dest, inst, midi, t, vel, opts) {
   const s = inst.sustain ?? 0.7;
   const r = inst.release ?? 0.18;
   const hold = opts.duration != null ? Math.max(opts.duration, a + d) : 3.0;
+  const stopT = t + hold + r;
 
   const filter = ctx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = inst.cutoff ?? 4000;
+  filter.type = inst.filterType || 'lowpass';
   filter.Q.value = inst.q ?? 1;
+  const baseCut = clamp(inst.cutoff ?? 4000, 30, 20000);
+  if (inst.filterEnv) {
+    // Filter-Hüllkurve: Cutoff fährt von hoch nach unten (Bewegung/„Pluck"/Acid)
+    const peakCut = clamp(baseCut * (1 + inst.filterEnv * 7), 60, 20000);
+    const fdec = inst.filterDecay || Math.max(0.04, d);
+    filter.frequency.setValueAtTime(peakCut, t);
+    filter.frequency.exponentialRampToValueAtTime(baseCut, t + fdec);
+  } else {
+    filter.frequency.value = baseCut;
+  }
 
   const amp = ctx.createGain();
   amp.gain.setValueAtTime(0.0001, t);
   amp.gain.linearRampToValueAtTime(peak, t + a);
   amp.gain.linearRampToValueAtTime(peak * s, t + a + d);
 
-  // Haupt-Oszillator (+ optional leicht verstimmter zweiter für "fat")
-  const oscs = [];
+  // Carrier-Oszillatoren (+ optional verstimmt für "fat")
+  const carriers = [];
   const mkOsc = (detuneCents) => {
     const o = ctx.createOscillator();
     o.type = inst.wave || 'sawtooth';
     o.frequency.value = freq;
     o.detune.value = (inst.detune || 0) + detuneCents;
     o.connect(filter);
-    oscs.push(o);
+    carriers.push(o);
   };
   mkOsc(0);
-  if (inst.fat) mkOsc(8), mkOsc(-8);
+  if (inst.fat) { mkOsc(8); mkOsc(-8); }
+  const oscs = carriers.slice();
 
-  // Optionaler Sub-Oszillator eine Oktave tiefer
+  // Sub-Oszillator eine Oktave tiefer
   if (inst.sub) {
     const sub = ctx.createOscillator();
     sub.type = 'sine';
@@ -112,22 +123,42 @@ function triggerSynth(ctx, dest, inst, midi, t, vel, opts) {
     oscs.push(sub);
   }
 
-  // optionale Verzerrung nach dem Filter
+  // FM: Modulator auf die Carrier-Frequenz (metallisch / Glocken / Growl)
+  if (inst.fmAmount && inst.fmRatio) {
+    const mod = ctx.createOscillator();
+    mod.type = 'sine';
+    mod.frequency.value = freq * inst.fmRatio;
+    const mg = ctx.createGain();
+    mg.gain.value = freq * inst.fmAmount;
+    mod.connect(mg);
+    for (const c of carriers) mg.connect(c.frequency);
+    oscs.push(mod);
+  }
+
+  // Rausch-Anteil (luftig/perkussiv) durch Filter + Hüllkurve
+  let noiseSrc = null;
+  if (inst.noise) {
+    noiseSrc = makeNoiseSource(ctx);
+    const ng = ctx.createGain();
+    ng.gain.value = inst.noise;
+    noiseSrc.connect(ng); ng.connect(filter);
+  }
+
+  // Filter -> (Distortion) -> Amp -> dest
   if (inst.drive) {
     const dist = makeDistortion(ctx, inst.drive);
-    filter.connect(dist);
-    dist.connect(amp);
+    filter.connect(dist); dist.connect(amp);
   } else {
     filter.connect(amp);
   }
   amp.connect(dest);
 
-  const stopT = t + hold + r;
   // Release-Phase
   amp.gain.setValueAtTime(peak * s, t + hold);
   amp.gain.linearRampToValueAtTime(0.0001, stopT);
 
   for (const o of oscs) { o.start(t); o.stop(stopT + 0.02); }
+  if (noiseSrc) { noiseSrc.start(t); noiseSrc.stop(stopT + 0.02); }
   return stopT + 0.05;
 }
 

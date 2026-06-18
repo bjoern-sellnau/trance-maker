@@ -100,8 +100,10 @@ direkten Vergleichen.
 Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 
 - **Synth** – Oszillator (Sinus/Sägezahn/Rechteck/Dreieck), ADSR-Hüllkurve,
-  Tiefpassfilter mit Resonanz, Sub-Oszillator, Verstimmung, „Fat"-Modus (3 Oszillatoren)
-  und **Drive/Verzerrung** (für Hardstyle-Kicks, Hoover, Screech).
+  **Filter (Tief-/Hoch-/Bandpass) mit Resonanz und Filter-Hüllkurve** (Bewegung),
+  **FM** (metallische/Glocken-/Growl-Klänge), **Rausch-Anteil**, Sub-Oszillator,
+  Verstimmung, „Fat"-Modus und **Drive/Verzerrung** – damit klingen Instrumente
+  wirklich unterschiedlich (echtes E-Piano/Glocken/Marimba per FM usw.).
 - **Drum** – Synthese von **Kick, Snare, HiHat, Clap, Tom** mit Tune/Decay/Click usw.
 - **Mikrofon** – direkt aufnehmen, mit Pegelanzeige, anschließend trimmen.
 - **Import** – beliebige Audiodatei (WAV/MP3/OGG …) laden und als Sample nutzen.
