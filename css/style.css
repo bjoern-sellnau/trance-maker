@@ -301,6 +301,34 @@ kbd { background: var(--bg3); border: 1px solid var(--line); border-radius: 4px;
 .om-item:hover { border-color: var(--accent); }
 .om-sep { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); padding: 6px 4px 2px; }
 
+/* Tutorial-Overlay */
+.tut-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8,10,14,.82); z-index: 65; }
+.tut-overlay.hidden { display: none; }
+.tut-panel { width: min(1080px, 95vw); height: min(90vh, 820px); background: var(--panel); border: 1px solid var(--accent); border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.tut-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.tut-body { flex: 1; display: flex; min-height: 0; }
+.tut-list { width: 210px; flex: none; border-right: 1px solid var(--line); padding: 8px; display: flex; flex-direction: column; gap: 4px; overflow: auto; }
+.tut-item { text-align: left; display: flex; flex-direction: column; gap: 2px; background: var(--bg2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+.tut-item:hover { border-color: var(--accent2); }
+.tut-item.active { border-color: var(--accent); background: var(--bg3); }
+.tut-item .muted { font-size: 11px; }
+.tut-content { flex: 1; overflow: auto; padding: 14px 18px; }
+.tut-content h3 { margin: 0 0 4px; }
+.tut-content h4 { margin: 16px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--accent2); }
+.tut-vibe { color: var(--muted); margin: 0 0 12px; }
+.tut-grid { display: flex; flex-direction: column; gap: 3px; font-family: var(--mono); }
+.tut-row { display: flex; align-items: center; gap: 8px; }
+.tut-lane { width: 92px; flex: none; font-size: 11px; color: var(--muted); text-align: right; }
+.tut-cells { display: flex; gap: 2px; }
+.tut-cell { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: var(--bg2); border: 1px solid var(--line); border-radius: 4px; font-size: 11px; color: #3b414d; }
+.tut-cell.beat { border-left: 2px solid rgba(56,189,248,.5); }
+.tut-cell.on { background: var(--accent); color: #04110b; }
+.tut-cell.num { background: transparent; border-color: transparent; color: var(--muted); height: 16px; }
+.tut-parts, .tut-steps, .tut-tips { margin: 4px 0; padding-left: 22px; line-height: 1.5; }
+.tut-steps li { margin-bottom: 7px; }
+.tut-parts li, .tut-tips li { margin-bottom: 4px; color: var(--text); }
+.tut-content .chip { cursor: default; }
+
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
   .side-panel { min-height: 320px; }
