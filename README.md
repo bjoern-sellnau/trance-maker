@@ -87,6 +87,13 @@ teilen sich dieselbe Instrument-/Sample-Bibliothek.
 Mit einstellbarem **Snap-Raster** (1 / ½ / ¼ / ⅛) und Vorhören. Ein Block mit Noten
 spielt diese Melodie ab (statt der Füllung); im Arranger sieht man eine Mini-Vorschau.
 
+### 📖 Tutorials (Songs nachbauen)
+Der Button **„📖 Tutorial"** oben öffnet Schritt-für-Schritt-Anleitungen für alle
+6 Demo-Songs. Jedes Tutorial zeigt **BPM & Tonart**, die nötigen **Presets**, ein
+**Drum-Raster** (welche Reihen), die **Akkordfolge**, konkrete **Bass-/Melodie-Hinweise**,
+nummerierte **Schritte** und Stil-**Tipps** – plus einen **„Demo laden"**-Knopf zum
+direkten Vergleichen.
+
 ### 🔊 Sample Maker
 Erzeuge eigene Instrumente/Samples auf vier Wegen (Tab *Sample Maker*):
 
@@ -150,6 +157,7 @@ trance-maker/
 │   ├── app.js            # zentrale App-Logik & Verdrahtung
 │   ├── model.js          # Datenmodell, Presets + Standardprojekt
 │   ├── demos.js          # 6 algorithmisch erzeugte Demo-Songs
+│   ├── tutorials.js      # Inhalte der Nachbau-Tutorials
 │   ├── sequencer.js      # Look-Ahead-Scheduler (Live-Wiedergabe) + Mixer-Routing
 │   ├── project.js        # Speichern/Laden (.trance) + WAV-Export
 │   ├── util.js           # Hilfsfunktionen
@@ -164,6 +172,7 @@ trance-maker/
 │       ├── arranger.js   # Arranger-Zeitleiste (Music-Maker-Ansicht)
 │       ├── keyboard.js   # Klaviatur (Melodien) + Drum-Kit-Pads
 │       ├── pianoroll.js  # Piano-Roll-Editor (Melodien wie in GarageBand)
+│       ├── tutorial.js   # Tutorial-Overlay (Songs nachbauen)
 │       └── samplemaker.js# Sample-Maker-Oberfläche + Wellenform
 └── test/core.test.js     # Unit-Tests (WAV, Base64, Modell, Serialisierung)
 ```

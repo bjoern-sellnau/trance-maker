@@ -9,6 +9,7 @@ import { SampleMakerUI } from './ui/samplemaker.js';
 import { ArrangerUI } from './ui/arranger.js';
 import { KeyboardUI, DrumkitUI } from './ui/keyboard.js';
 import { PianoRollUI } from './ui/pianoroll.js';
+import { TutorialUI } from './ui/tutorial.js';
 import { getAnalyser, ensureRunning } from './audio/context.js';
 import { saveProjectToFile, openProjectFromFile, exportSongWav, decodeAudioFile } from './project.js';
 import { buildDemo, DEMO_LIST } from './demos.js';
@@ -46,6 +47,8 @@ export class App {
     this.keyboard = new KeyboardUI(this, $('#keyboard'));
     this.drumkit = new DrumkitUI(this, $('#drumkit'));
     this.pianoRoll = new PianoRollUI(this, $('#pianoRoll'));
+    this.tutorial = new TutorialUI(this, $('#tutorial'));
+    $('#btnTutorial').addEventListener('click', () => this.tutorial.open());
     $('#kbOctUp').addEventListener('click', () => { this.setOctave(this.octave + 1); this.keyboard.render(); });
     $('#kbOctDown').addEventListener('click', () => { this.setOctave(this.octave - 1); this.keyboard.render(); });
     this.seq.onArrPos = (beat) => { this.arranger.setPlayhead(beat); this.updateArrTime(beat < 0 ? this.seekBeat : beat); };
