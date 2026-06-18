@@ -11,6 +11,7 @@ export class ArrangerUI {
     this.beatWidth = 30;
     this.minBeatW = 1;
     this.maxBeatW = 80;
+    this.snap = 1;            // Raster in Beats (1 Takt=4, Beat=1, 1/2, 1/4, 1/8)
     this.laneHeight = 44;
     this.rulerH = 22;
     this.labelW = 64;
@@ -67,13 +68,15 @@ export class ArrangerUI {
       class: 'arr-bg',
       style: `left:${this.labelW}px;top:${this.rulerH}px;width:${gridBeats * this.beatWidth}px;height:${tracks * this.laneHeight}px`
     });
-    bg.style.backgroundImage =
-      `repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px ${this.beatWidth}px),` +
+    const subPx = this.snap * this.beatWidth;
+    const subGrad = (this.snap < 1 && subPx >= 6) ? `repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px ${subPx}px),` : '';
+    bg.style.backgroundImage = subGrad +
+      `repeating-linear-gradient(90deg, rgba(255,255,255,.06) 0 1px, transparent 1px ${this.beatWidth}px),` +
       `repeating-linear-gradient(90deg, rgba(56,189,248,.25) 0 2px, transparent 2px ${barW}px),` +
       `repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, transparent 1px ${this.laneHeight}px)`;
     bg.addEventListener('pointerdown', (e) => {
       if (e.target !== bg || e.button !== 0) return;
-      const startBeat = Math.floor(e.offsetX / this.beatWidth);
+      const startBeat = Math.floor((e.offsetX / this.beatWidth) / this.snap) * this.snap;
       const track = clamp(Math.floor(e.offsetY / this.laneHeight), 0, tracks - 1);
       this.startFrameDrag(e, bg, track, startBeat);
     });
@@ -86,7 +89,7 @@ export class ArrangerUI {
       e.preventDefault(); e.stopPropagation();
       bg.classList.remove('drag-over');
       const id = e.dataTransfer.getData('application/x-trance-inst');
-      const beat = Math.floor(e.offsetX / this.beatWidth);
+      const beat = Math.floor((e.offsetX / this.beatWidth) / this.snap) * this.snap;
       const track = clamp(Math.floor(e.offsetY / this.laneHeight), 0, tracks - 1);
       this.placeClipFor(id, track, beat);
     });
@@ -197,14 +200,14 @@ export class ArrangerUI {
     frame.style.top = (track * this.laneHeight + this.clipPad / 2) + 'px';
     frame.style.height = (this.laneHeight - this.clipPad) + 'px';
     frame.style.left = (startBeat * this.beatWidth) + 'px';
-    frame.style.width = this.beatWidth + 'px';
+    frame.style.width = (this.snap * this.beatWidth) + 'px';
     bg.appendChild(frame);
 
-    let length = 1, moved = false;
+    let length = this.snap, moved = false;
     const onMove = (ev) => {
       if (Math.abs(ev.clientX - e.clientX) > 4) moved = true;
-      const curBeat = Math.round((ev.clientX - rect.left) / this.beatWidth);
-      length = clamp(curBeat - startBeat, 1, this.gridBeats() - startBeat);
+      const curBeat = (ev.clientX - rect.left) / this.beatWidth;
+      length = clamp(Math.round((curBeat - startBeat) / this.snap) * this.snap, this.snap, this.gridBeats() - startBeat);
       frame.style.width = (length * this.beatWidth) + 'px';
     };
     const onUp = () => {
@@ -234,7 +237,7 @@ export class ArrangerUI {
   placeClipFor(instId, track, beat, lengthOverride) {
     const inst = this.app.getInstrument(instId);
     if (!inst) return;
-    const lengthBeats = lengthOverride != null ? Math.max(1, lengthOverride) : this.defaultLength(inst);
+    const lengthBeats = lengthOverride != null ? Math.max(this.snap, lengthOverride) : this.defaultLength(inst);
     const midi = inst.type === 'sample' ? (inst.baseNote ?? 60)
       : inst.type === 'drum' ? 60
         : 12 * (this.app.octave + 1);
@@ -266,10 +269,10 @@ export class ArrangerUI {
       const dx = ev.clientX - startX, dy = ev.clientY - startY;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
       if (mode === 'resize') {
-        clip.lengthBeats = clamp(Math.round(origLen + dx / this.beatWidth), 1, this.gridBeats());
+        clip.lengthBeats = clamp(Math.round((origLen + dx / this.beatWidth) / this.snap) * this.snap, this.snap, this.gridBeats());
         node.style.width = (clip.lengthBeats * this.beatWidth - 2) + 'px';
       } else {
-        clip.startBeat = clamp(Math.round(origStart + dx / this.beatWidth), 0, this.gridBeats() - 1);
+        clip.startBeat = clamp(Math.round((origStart + dx / this.beatWidth) / this.snap) * this.snap, 0, this.gridBeats() - this.snap);
         clip.track = clamp(Math.round(origTrack + dy / this.laneHeight), 0, this.arr.tracks - 1);
         node.style.left = (clip.startBeat * this.beatWidth) + 'px';
         node.style.top = (clip.track * this.laneHeight + this.clipPad / 2) + 'px';

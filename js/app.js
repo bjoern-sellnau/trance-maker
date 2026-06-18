@@ -294,6 +294,14 @@ export class App {
     const tracks = el('input', { type: 'number', min: 1, max: 16, step: 1, value: arr.tracks, style: 'width:54px' });
     tracks.addEventListener('change', () => { arr.tracks = clamp(parseInt(tracks.value) || 8, 1, 16); this.arranger.render(); });
     c.appendChild(el('label', { class: 'muted', style: 'display:flex;gap:4px;align-items:center' }, ['Spuren', tracks]));
+    const snap = el('select', { title: 'Raster für Blöcke (kleinere Sound-Bausteine)' });
+    [['4', '1 Takt'], ['1', '1 Beat'], ['0.5', '1/2'], ['0.25', '1/4'], ['0.125', '1/8']].forEach(([v, l]) => {
+      const o = el('option', { value: v, text: l });
+      if (+v === this.arranger.snap) o.selected = true;
+      snap.appendChild(o);
+    });
+    snap.addEventListener('change', () => { this.arranger.snap = +snap.value; this.arranger.render(); });
+    c.appendChild(el('label', { class: 'muted', style: 'display:flex;gap:4px;align-items:center' }, ['Raster', snap]));
     c.appendChild(el('button', { class: 'pc-btn', text: '＋ Melodie', title: 'Melodie-Block anlegen und im Piano-Roll öffnen',
       onclick: () => this.arranger.addMelodyClip() }));
     c.appendChild(el('button', { class: 'pc-btn', text: '🔍−', title: 'Rauszoomen', onclick: () => this.arranger.zoomBy(0.6) }));
