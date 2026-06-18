@@ -198,11 +198,18 @@ export class SampleMakerUI {
     b.appendChild(this.slider('Decay', d, 'decay', 0, 1, 0.001, (v) => v.toFixed(3) + 's'));
     b.appendChild(this.slider('Sustain', d, 'sustain', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.slider('Release', d, 'release', 0, 1.5, 0.001, (v) => v.toFixed(3) + 's'));
+    b.appendChild(this.select('Filter-Typ', d, 'filterType', [
+      { value: 'lowpass', label: 'Tiefpass' }, { value: 'highpass', label: 'Hochpass' }, { value: 'bandpass', label: 'Bandpass' }
+    ]));
     b.appendChild(this.slider('Filter Cutoff', d, 'cutoff', 80, 12000, 10, (v) => Math.round(v) + ' Hz'));
     b.appendChild(this.slider('Resonanz (Q)', d, 'q', 0.1, 20, 0.1, (v) => v.toFixed(1)));
+    b.appendChild(this.slider('Filter-Hüllkurve', d, 'filterEnv', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.slider('Sub-Oszillator', d, 'sub', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.slider('Verstimmung', d, 'detune', -50, 50, 1, (v) => Math.round(v) + ' ct'));
     b.appendChild(this.checkbox('Fat (3 Osz.)', d, 'fat'));
+    b.appendChild(this.slider('FM-Verhältnis', d, 'fmRatio', 0, 8, 0.5, (v) => v.toFixed(1)));
+    b.appendChild(this.slider('FM-Stärke', d, 'fmAmount', 0, 6, 0.05, (v) => v.toFixed(2)));
+    b.appendChild(this.slider('Rauschen', d, 'noise', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.slider('Drive/Verzerrung', d, 'drive', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.slider('Pegel', d, 'gain', 0, 1, 0.01, (v) => v.toFixed(2)));
     b.appendChild(this.bakeToggle());

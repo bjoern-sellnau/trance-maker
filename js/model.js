@@ -16,7 +16,8 @@ export function createInstrument(opts = {}) {
   if (base.type === 'synth') {
     return Object.assign(base, {
       wave: 'sawtooth', attack: 0.005, decay: 0.12, sustain: 0.7, release: 0.18,
-      cutoff: 4000, q: 1, sub: 0, fat: false, detune: 0, drive: 0, gain: 0.8
+      cutoff: 4000, q: 1, sub: 0, fat: false, detune: 0, drive: 0, gain: 0.8,
+      filterType: 'lowpass', filterEnv: 0, fmRatio: 0, fmAmount: 0, noise: 0
     }, opts);
   }
   if (base.type === 'drum') {
@@ -124,7 +125,7 @@ export const PRESETS = [
   // Bass
   { category: 'Bass', name: 'Bass', type: 'synth', wave: 'sawtooth', cutoff: 700, q: 6, sub: 0.6, attack: 0.004, decay: 0.18, sustain: 0.2, release: 0.08, gain: 0.85 },
   { category: 'Bass', name: 'Sub Bass', type: 'synth', wave: 'sine', cutoff: 3000, q: 0.7, attack: 0.005, decay: 0.2, sustain: 0.9, release: 0.12, gain: 0.8 },
-  { category: 'Bass', name: 'Acid Bass', type: 'synth', wave: 'sawtooth', cutoff: 500, q: 14, sub: 0.2, attack: 0.004, decay: 0.22, sustain: 0.2, release: 0.1, drive: 0.3, gain: 0.6 },
+  { category: 'Bass', name: 'Acid Bass', type: 'synth', wave: 'sawtooth', cutoff: 500, q: 14, sub: 0.2, attack: 0.004, decay: 0.22, sustain: 0.2, release: 0.1, drive: 0.3, filterEnv: 0.6, gain: 0.6 },
   { category: 'Bass', name: 'Reese Bass', type: 'synth', wave: 'sawtooth', fat: true, detune: 28, cutoff: 900, q: 3, sub: 0.3, attack: 0.01, decay: 0.3, sustain: 0.7, release: 0.2, drive: 0.2, gain: 0.5 },
   { category: 'Bass', name: 'Donk', type: 'synth', wave: 'square', cutoff: 4200, q: 9, attack: 0.001, decay: 0.09, sustain: 0.0, release: 0.05, drive: 0.25, gain: 0.55 },
   // Lead
@@ -134,28 +135,28 @@ export const PRESETS = [
   { category: 'Lead', name: 'Screech', type: 'synth', wave: 'sawtooth', fat: true, cutoff: 5200, q: 8, attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.3, drive: 0.5, gain: 0.3 },
   { category: 'Lead', name: 'Saw Lead', type: 'synth', wave: 'sawtooth', cutoff: 5500, q: 1.5, attack: 0.01, decay: 0.2, sustain: 0.7, release: 0.25, gain: 0.4 },
   // Pluck
-  { category: 'Pluck', name: 'Pluck', type: 'synth', wave: 'triangle', cutoff: 3500, q: 3, attack: 0.002, decay: 0.16, sustain: 0.0, release: 0.12, gain: 0.6 },
-  { category: 'Pluck', name: 'Trance Pluck', type: 'synth', wave: 'sawtooth', cutoff: 4200, q: 5, attack: 0.002, decay: 0.18, sustain: 0.0, release: 0.14, gain: 0.55 },
-  { category: 'Pluck', name: 'Glass Pluck', type: 'synth', wave: 'sine', cutoff: 6000, q: 2, attack: 0.001, decay: 0.25, sustain: 0.0, release: 0.2, gain: 0.6 },
+  { category: 'Pluck', name: 'Pluck', type: 'synth', wave: 'triangle', cutoff: 3500, q: 3, attack: 0.002, decay: 0.16, sustain: 0.0, release: 0.12, filterEnv: 0.35, gain: 0.6 },
+  { category: 'Pluck', name: 'Trance Pluck', type: 'synth', wave: 'sawtooth', cutoff: 4200, q: 5, attack: 0.002, decay: 0.18, sustain: 0.0, release: 0.14, filterEnv: 0.45, gain: 0.55 },
+  { category: 'Pluck', name: 'Glass Pluck', type: 'synth', wave: 'sine', cutoff: 6000, q: 2, attack: 0.001, decay: 0.25, sustain: 0.0, release: 0.2, fmRatio: 3.5, fmAmount: 0.6, gain: 0.6 },
   // Pad
   { category: 'Pad', name: 'Trance Pad', type: 'synth', wave: 'sawtooth', fat: true, cutoff: 2600, q: 1, attack: 0.45, decay: 0.6, sustain: 0.85, release: 0.9, gain: 0.32 },
   { category: 'Pad', name: 'Warm Pad', type: 'synth', wave: 'triangle', fat: true, cutoff: 2200, q: 0.8, attack: 0.6, decay: 0.8, sustain: 0.8, release: 1.1, gain: 0.34 },
   { category: 'Pad', name: 'Choir Pad', type: 'synth', wave: 'sawtooth', fat: true, detune: 8, cutoff: 3000, q: 1, attack: 0.5, decay: 0.7, sustain: 0.9, release: 1.0, gain: 0.3 },
-  // Keyboard-spezifische Sounds
-  { category: 'Keyboard', name: 'Grand Piano', type: 'synth', wave: 'triangle', attack: 0.002, decay: 0.6, sustain: 0.0, release: 0.35, cutoff: 5200, q: 0.8, gain: 0.6 },
-  { category: 'Keyboard', name: 'E-Piano', type: 'synth', wave: 'sine', attack: 0.002, decay: 0.5, sustain: 0.2, release: 0.4, cutoff: 4200, q: 0.8, gain: 0.6 },
+  // Keyboard-spezifische Sounds (FM für realistische Klangfarben)
+  { category: 'Keyboard', name: 'Grand Piano', type: 'synth', wave: 'triangle', attack: 0.002, decay: 0.6, sustain: 0.0, release: 0.35, cutoff: 5200, q: 0.8, fmRatio: 3, fmAmount: 0.35, gain: 0.6 },
+  { category: 'Keyboard', name: 'E-Piano', type: 'synth', wave: 'sine', attack: 0.002, decay: 0.5, sustain: 0.2, release: 0.4, cutoff: 4200, q: 0.8, fmRatio: 2, fmAmount: 0.85, gain: 0.6 },
   { category: 'Keyboard', name: 'Orgel', type: 'synth', wave: 'square', attack: 0.01, decay: 0.2, sustain: 0.9, release: 0.2, cutoff: 4500, q: 0.7, gain: 0.4 },
-  { category: 'Keyboard', name: 'Clavinet', type: 'synth', wave: 'square', attack: 0.002, decay: 0.15, sustain: 0.1, release: 0.12, cutoff: 3600, q: 1.5, drive: 0.2, gain: 0.5 },
-  { category: 'Keyboard', name: 'Glocken', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.8, sustain: 0.0, release: 0.6, cutoff: 7000, q: 0.8, gain: 0.55 },
-  { category: 'Keyboard', name: 'Synth Keys', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.3, cutoff: 5000, q: 1, gain: 0.4 },
-  { category: 'Keyboard', name: 'Streicher', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.3, decay: 0.6, sustain: 0.85, release: 0.8, cutoff: 3500, q: 1, gain: 0.34 },
-  { category: 'Keyboard', name: 'Cembalo', type: 'synth', wave: 'square', attack: 0.001, decay: 0.4, sustain: 0.0, release: 0.3, cutoff: 5200, q: 1.2, gain: 0.5 },
+  { category: 'Keyboard', name: 'Clavinet', type: 'synth', wave: 'square', attack: 0.002, decay: 0.15, sustain: 0.1, release: 0.12, cutoff: 3600, q: 1.5, drive: 0.2, filterEnv: 0.5, gain: 0.5 },
+  { category: 'Keyboard', name: 'Glocken', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.8, sustain: 0.0, release: 0.6, cutoff: 7000, q: 0.8, fmRatio: 3.5, fmAmount: 1.4, gain: 0.5 },
+  { category: 'Keyboard', name: 'Synth Keys', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.3, cutoff: 5000, q: 1, filterEnv: 0.3, gain: 0.4 },
+  { category: 'Keyboard', name: 'Streicher', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.3, decay: 0.6, sustain: 0.85, release: 0.8, cutoff: 3500, q: 1, noise: 0.05, gain: 0.34 },
+  { category: 'Keyboard', name: 'Cembalo', type: 'synth', wave: 'square', attack: 0.001, decay: 0.4, sustain: 0.0, release: 0.3, cutoff: 5200, q: 1.2, fmRatio: 4, fmAmount: 0.5, gain: 0.5 },
   // Orchester
   { category: 'Orchestra', name: 'Streicher Ensemble', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.25, decay: 0.5, sustain: 0.9, release: 0.8, cutoff: 3600, q: 0.9, gain: 0.32 },
   { category: 'Orchestra', name: 'Pizzicato', type: 'synth', wave: 'triangle', attack: 0.002, decay: 0.2, sustain: 0.0, release: 0.15, cutoff: 4500, q: 1.5, gain: 0.55 },
   { category: 'Orchestra', name: 'Blechbläser', type: 'synth', wave: 'sawtooth', attack: 0.03, decay: 0.2, sustain: 0.8, release: 0.25, cutoff: 3500, q: 1, drive: 0.15, gain: 0.4 },
   { category: 'Orchestra', name: 'Horn', type: 'synth', wave: 'triangle', attack: 0.05, decay: 0.3, sustain: 0.85, release: 0.4, cutoff: 2800, q: 0.8, gain: 0.45 },
-  { category: 'Orchestra', name: 'Flöte', type: 'synth', wave: 'sine', attack: 0.06, decay: 0.2, sustain: 0.9, release: 0.3, cutoff: 6000, q: 0.7, gain: 0.5 },
+  { category: 'Orchestra', name: 'Flöte', type: 'synth', wave: 'sine', attack: 0.06, decay: 0.2, sustain: 0.9, release: 0.3, cutoff: 6000, q: 0.7, noise: 0.12, gain: 0.5 },
   { category: 'Orchestra', name: 'Cello', type: 'synth', wave: 'sawtooth', fat: true, attack: 0.08, decay: 0.4, sustain: 0.85, release: 0.5, cutoff: 2000, q: 1, gain: 0.42 },
   { category: 'Orchestra', name: 'Pauke', type: 'drum', drum: 'tom', tune: 90, decay: 0.5, pitched: true, gain: 0.8 },
   // Chiptune
@@ -165,11 +166,11 @@ export const PRESETS = [
   { category: 'Chiptune', name: 'NES Bass', type: 'synth', wave: 'triangle', attack: 0.001, decay: 0.1, sustain: 0.8, release: 0.05, cutoff: 2500, q: 0.7, gain: 0.6 },
   { category: 'Chiptune', name: 'Arp Blip', type: 'synth', wave: 'square', attack: 0.001, decay: 0.06, sustain: 0.0, release: 0.04, cutoff: 9000, q: 1, gain: 0.4 },
   // Mallets & Welt
-  { category: 'Mallets', name: 'Marimba', type: 'synth', wave: 'triangle', attack: 0.001, decay: 0.4, sustain: 0.0, release: 0.3, cutoff: 4000, q: 0.9, gain: 0.55 },
-  { category: 'Mallets', name: 'Kalimba', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.5, sustain: 0.0, release: 0.35, cutoff: 5000, q: 0.8, gain: 0.55 },
-  { category: 'Mallets', name: 'Spieluhr', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.7, sustain: 0.0, release: 0.5, cutoff: 8000, q: 0.8, gain: 0.5 },
-  { category: 'Mallets', name: 'Vibraphon', type: 'synth', wave: 'sine', attack: 0.002, decay: 0.8, sustain: 0.2, release: 0.5, cutoff: 5500, q: 0.8, gain: 0.5 },
-  { category: 'Mallets', name: 'Steel Drum', type: 'synth', wave: 'triangle', attack: 0.002, decay: 0.5, sustain: 0.1, release: 0.3, cutoff: 4500, q: 1, drive: 0.12, gain: 0.5 },
+  { category: 'Mallets', name: 'Marimba', type: 'synth', wave: 'triangle', attack: 0.001, decay: 0.4, sustain: 0.0, release: 0.3, cutoff: 4000, q: 0.9, fmRatio: 4, fmAmount: 0.6, gain: 0.55 },
+  { category: 'Mallets', name: 'Kalimba', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.5, sustain: 0.0, release: 0.35, cutoff: 5000, q: 0.8, fmRatio: 3, fmAmount: 0.5, gain: 0.55 },
+  { category: 'Mallets', name: 'Spieluhr', type: 'synth', wave: 'sine', attack: 0.001, decay: 0.7, sustain: 0.0, release: 0.5, cutoff: 8000, q: 0.8, fmRatio: 7, fmAmount: 0.8, gain: 0.5 },
+  { category: 'Mallets', name: 'Vibraphon', type: 'synth', wave: 'sine', attack: 0.002, decay: 0.8, sustain: 0.2, release: 0.5, cutoff: 5500, q: 0.8, fmRatio: 4, fmAmount: 0.4, gain: 0.5 },
+  { category: 'Mallets', name: 'Steel Drum', type: 'synth', wave: 'triangle', attack: 0.002, decay: 0.5, sustain: 0.1, release: 0.3, cutoff: 4500, q: 1, drive: 0.12, fmRatio: 3, fmAmount: 0.6, gain: 0.5 },
   // --- 75 weitere Instrumente ---
   // Techno
   { category: 'Techno', name: 'Techno Kick', type: 'drum', drum: 'kick', tune: 48, decay: 0.4, click: 0.4, drive: 0.25 },
@@ -227,7 +228,7 @@ export const PRESETS = [
   { category: 'Brass & Wind', name: 'Saxophon', type: 'synth', wave: 'sawtooth', attack: 0.03, sustain: 0.8, release: 0.3, cutoff: 3200, drive: 0.15, q: 2, gain: 0.4 },
   { category: 'Brass & Wind', name: 'Tuba', type: 'synth', wave: 'triangle', attack: 0.04, sustain: 0.85, release: 0.3, cutoff: 1500, gain: 0.5 },
   { category: 'Brass & Wind', name: 'Klarinette', type: 'synth', wave: 'square', attack: 0.03, sustain: 0.85, release: 0.25, cutoff: 3000, gain: 0.4 },
-  { category: 'Brass & Wind', name: 'Panflöte', type: 'synth', wave: 'sine', attack: 0.05, sustain: 0.9, release: 0.3, cutoff: 5500, gain: 0.45 },
+  { category: 'Brass & Wind', name: 'Panflöte', type: 'synth', wave: 'sine', attack: 0.05, sustain: 0.9, release: 0.3, cutoff: 5500, noise: 0.15, gain: 0.45 },
   { category: 'Brass & Wind', name: 'Whistle', type: 'synth', wave: 'sine', attack: 0.02, sustain: 0.9, release: 0.2, cutoff: 8000, gain: 0.4 },
   { category: 'Brass & Wind', name: 'Oboe', type: 'synth', wave: 'sawtooth', attack: 0.03, sustain: 0.85, release: 0.2, cutoff: 3500, q: 2, gain: 0.38 },
   { category: 'Brass & Wind', name: 'Blockflöte', type: 'synth', wave: 'triangle', attack: 0.02, sustain: 0.9, release: 0.2, cutoff: 6000, gain: 0.45 },
@@ -318,6 +319,16 @@ function generateGenrePresets() {
         if (role.drum) p.drum = role.drum;
         if (role.waves) p.wave = pick(role.waves);
         for (const k of Object.keys(role.vary || {})) p[k] = sample(k, role.vary[k][0], role.vary[k][1]);
+        // Klangvielfalt: Filter-Hüllkurve, FM, Filtertyp, Noise – rollenbezogen
+        if (p.type === 'synth') {
+          const rn = role.role;
+          if (/Lead|Pluck|Stab|Arp|Bass|Wobble|Growl|Guitar|Chug/.test(rn)) p.filterEnv = +(0.1 + rng() * 0.5).toFixed(2);
+          if (rng() > 0.78) { p.fmRatio = pick([1, 2, 3, 3.5, 4, 5, 7]); p.fmAmount = +(0.2 + rng() * 1.4).toFixed(2); if (rng() > 0.5) p.wave = 'sine'; }
+          const ft = rng();
+          if (/Pad/.test(rn) && ft > 0.6) p.filterType = 'bandpass';
+          else if (ft > 0.9) p.filterType = 'highpass';
+          if (rng() > 0.85) p.noise = +(rng() * 0.18).toFixed(2);
+        }
         out.push(p);
       }
     }
