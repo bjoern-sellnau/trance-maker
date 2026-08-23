@@ -2,7 +2,13 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0e1014" />
+  <!-- Als Web-App zum Home-Bildschirm (iPhone/iPad) -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Trance Maker" />
   <title>Trance Maker — Track- &amp; Sample-Maker</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -39,7 +45,13 @@
     </div>
   </header>
 
-  <main class="layout">
+  <!-- Nur auf schmalen Geräten (iPhone): zwischen Arbeitsfläche und Werkzeugen wechseln -->
+  <nav class="mobile-switch" id="mobileSwitch" aria-label="Bereich wechseln">
+    <button data-pane="main" class="active">🎛️ Arbeitsfläche</button>
+    <button data-pane="side">🎹 Werkzeuge</button>
+  </nav>
+
+  <main class="layout" id="layout">
     <section class="panel main-panel">
       <div class="panel-head">
         <div class="view-switch" id="viewSwitch">

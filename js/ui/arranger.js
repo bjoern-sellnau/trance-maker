@@ -37,6 +37,8 @@ export class ArrangerUI {
   render() {
     const root = this.root;
     root.innerHTML = '';
+    // Auf schmalen Geräten fressen breite Spur-Labels die Arbeitsfläche
+    this.labelW = window.innerWidth < 820 ? 40 : 64;
     const gridBeats = this.gridBeats();
     const tracks = this.arr.tracks;
     const W = this.labelW + gridBeats * this.beatWidth;
@@ -54,12 +56,14 @@ export class ArrangerUI {
     ruler.addEventListener('pointerdown', (e) => this.app.seekTo(e.offsetX / this.beatWidth));
     grid.appendChild(ruler);
 
-    // Spur-Beschriftungen (links, klebend)
+    // Spur-Beschriftungen (links, klebend) – schmal nur die Nummer
+    const shortLabels = this.labelW < 56;
     for (let t = 0; t < tracks; t++) {
       grid.appendChild(el('div', {
         class: 'arr-lane-label',
         style: `top:${this.rulerH + t * this.laneHeight}px;height:${this.laneHeight}px;width:${this.labelW}px`,
-        text: 'Spur ' + (t + 1)
+        title: 'Spur ' + (t + 1),
+        text: shortLabels ? String(t + 1) : 'Spur ' + (t + 1)
       }));
     }
 
@@ -152,14 +156,18 @@ export class ArrangerUI {
     ]);
     node._clip = clip;
 
-    node.querySelector('.arr-clip-del').addEventListener('pointerdown', (e) => {
+    // Bei sehr schmalen Blöcken würden Lösch-/Größen-Griff den Block verdecken
+    const delEl = node.querySelector('.arr-clip-del');
+    const resizeEl = node.querySelector('.arr-clip-resize');
+    if (width < 46) { delEl.style.display = 'none'; resizeEl.style.display = 'none'; }
+    delEl.addEventListener('pointerdown', (e) => {
       e.stopPropagation(); this.removeClip(clip.id);
     });
-    node.querySelector('.arr-clip-resize').addEventListener('pointerdown', (e) => {
+    resizeEl.addEventListener('pointerdown', (e) => {
       e.stopPropagation(); this.startDrag(e, clip, node, 'resize');
     });
+    // Ziehen + Doppelklick/-tipp (Erkennung in startDrag, da dblclick auf iOS ausbleibt)
     node.addEventListener('pointerdown', (e) => this.startDrag(e, clip, node, 'move'));
-    node.addEventListener('dblclick', (e) => { e.stopPropagation(); this.app.openPianoRoll(clip); });
     if (isMelody) node.appendChild(this._noteMarks(clip, width, height));
     return node;
   }
@@ -210,16 +218,22 @@ export class ArrangerUI {
       length = clamp(Math.round((curBeat - startBeat) / this.snap) * this.snap, this.snap, this.gridBeats() - startBeat);
       frame.style.width = (length * this.beatWidth) + 'px';
     };
-    const onUp = () => {
+    const detach = () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
       frame.remove();
+    };
+    const onCancel = () => detach();   // iOS: System-Geste bricht das Aufziehen ab
+    const onUp = () => {
+      detach();
       const inst = this.app.selectedInstrument;
       if (!inst) { this.app.setStatus('Erst ein Instrument wählen.'); return; }
       this.placeClipFor(inst.id, track, startBeat, moved ? length : undefined);
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
   }
 
   placeClip(track, beat) {
@@ -278,13 +292,28 @@ export class ArrangerUI {
         node.style.top = (clip.track * this.laneHeight + this.clipPad / 2) + 'px';
       }
     };
-    const onUp = () => {
+    const detach = () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+    };
+    // iOS bricht Pointer bei System-Gesten ab – sonst bliebe der Block am Finger kleben
+    const onCancel = () => { detach(); this.render(); };
+    const onUp = () => {
+      detach();
       if (moved) { this.render(); return; }
-      // einfacher Klick: Auswahl ohne Re-Render (sonst bricht der Doppelklick zum Piano-Roll)
+      // einfacher Klick/Tipp: Auswahl ohne Re-Render (sonst bricht der Doppeltipp)
       if (this._layer) this._layer.querySelectorAll('.arr-clip.selected').forEach((n) => { if (n !== node) n.classList.remove('selected'); });
       node.classList.add('selected');
+      // Doppeltipp auf denselben Block öffnet den Piano-Roll (Maus wie Touch)
+      const now = performance.now();
+      if (this._tapClipId === clip.id && now - (this._tapAt || 0) < 340) {
+        this._tapClipId = null;
+        this.app.openPianoRoll(clip);
+        return;
+      }
+      this._tapClipId = clip.id;
+      this._tapAt = now;
       if (mode === 'move') {
         const inst = this.app.getInstrument(clip.inst);
         if (inst) this.app.seq.preview(inst, clip.midi, Math.min(2, clip.lengthBeats * this.spb));
@@ -292,6 +321,7 @@ export class ArrangerUI {
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
   }
 
   setPlayhead(beat) {
