@@ -23,9 +23,36 @@ html, body {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   overflow: hidden;
+  /* iOS: kein Text-Autoscaling im Querformat, kein Gummiband-Scrollen der Seite */
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
 }
 
-body { display: flex; flex-direction: column; }
+body {
+  display: flex;
+  flex-direction: column;
+  /* iOS Safari: dynamische Adressleiste – dvh statt 100vh */
+  height: 100dvh;
+  /* Notch / Dynamic Island / Home-Indicator aussparen */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  /* Doppeltipp-Zoom aus (Pinch-Zoom bleibt erlaubt), kein Long-Press-Menü auf Bedienelementen */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+/* Bedienelemente nicht markierbar – sonst poppt auf iOS beim Ziehen die Textauswahl auf */
+.topbar, .panel-head, .tabs, .sm-subtabs, .mobile-switch,
+.tracker, .arranger-wrap, .keyboard, .drumkit, .pr-panel, .mixer {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Flächen, auf denen gezogen wird: Browser-Scrollgesten abschalten,
+   damit Ziehen wirklich zieht statt die Seite zu scrollen */
+.arr-bg, .arr-clip, .arr-ruler, .pr-grid, .pr-note,
+.kb-key, .drum-pad .pad-trigger, .mix-ch input[type=range] {
+  touch-action: none;
+}
 
 /* ---------- Topbar ---------- */
 .topbar {
@@ -329,7 +356,141 @@ kbd { background: var(--bg3); border: 1px solid var(--line); border-radius: 4px;
 .tut-parts li, .tut-tips li { margin-bottom: 4px; color: var(--text); }
 .tut-content .chip { cursor: default; }
 
-@media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
-  .side-panel { min-height: 320px; }
+/* ================= Mobil: iPhone & iPad ================= */
+
+/* Umschalter zwischen Arbeitsfläche und Werkzeugen – nur auf schmalen Geräten */
+.mobile-switch { display: none; gap: 6px; padding: 6px 10px 0; }
+.mobile-switch button {
+  flex: 1; padding: 10px; font-size: 13px; font-weight: 600;
+  background: var(--bg2); color: var(--muted);
+  border: 1px solid var(--line); border-radius: 9px; cursor: pointer;
+}
+.mobile-switch button.active { background: var(--accent); color: #04110b; border-color: var(--accent); }
+
+/* --- Touch-Geräte (iPhone & iPad): größere Ziele, kein Fokus-Zoom --- */
+@media (pointer: coarse) {
+  /* iOS zoomt beim Antippen von Feldern mit < 16px Schrift –
+     Spezifität muss die Detailregeln (.field input usw.) überstimmen */
+  input, select, textarea,
+  .field input, .ctl input, .ctl select, .song-title,
+  .pattern-controls input, .pattern-controls select,
+  .pr-header input, .pr-header select, .pad-sel, .kb-inst-select {
+    font-size: 16px;
+  }
+
+  .p-btn, .pc-btn, .t-btn, .om-item, .chip, .mini {
+    min-height: 44px;              /* Apple HIG: 44pt Mindestgröße */
+    padding-left: 12px; padding-right: 12px;
+  }
+  /* Tabs teilen sich die Breite – hier schmales Padding, sonst wird der Text abgeschnitten */
+  .tab, .subtab { min-height: 44px; padding-left: 3px; padding-right: 3px; font-size: 11px; }
+  .t-btn { width: 52px; }
+  .field input { width: 74px; }
+  .inst-item { padding: 11px 10px; }
+  .inst-item button { min-width: 40px; min-height: 40px; font-size: 17px; }
+
+  /* Tracker: Zeilen/Zellen fingerfreundlich */
+  .tracker { font-size: 15px; }
+  .trk-cell, .trk-head-ch { min-width: 108px; padding: 7px 6px; }
+  .trk-rownum { padding: 7px 0; }
+
+  /* Arranger & Piano-Roll: mehr Fläche zum Greifen */
+  .arr-clip-del { width: 26px; height: 26px; line-height: 25px; font-size: 15px; }
+  .arr-clip-resize { width: 18px; }
+  .pr-note-resize { width: 14px; }
+  .kb-key.white { min-width: 34px; }
+  .keyboard { height: 190px; }
+  .drum-pad .pad-trigger { min-height: 60px; }
+
+  /* Trägheitsscrollen in allen scrollbaren Bereichen */
+  .tracker-wrap, .arranger-wrap, .tabpanel, .pr-body, .tut-content, .tut-list {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* --- iPad (und kleine Laptops): Seitenleiste schmaler --- */
+@media (max-width: 1180px) {
+  .layout { grid-template-columns: 1fr 340px; }
+  .topbar { gap: 10px; padding: 8px 10px; }
+  .brand { font-size: 15px; }
+}
+
+/* --- iPad Hochformat: Seitenleiste noch schmaler --- */
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr 300px; gap: 8px; padding: 8px; }
+  .tut-panel, .pr-panel { width: 96vw; height: 92vh; }
+  /* 5 Tabs passen nicht nebeneinander in eine schmale Leiste – zweizeilig */
+  .tabs { flex-wrap: wrap; }
+  .tabs .tab { flex: 1 1 30%; font-size: 12px; padding-left: 6px; padding-right: 6px; }
+}
+
+/* --- iPhone: einspaltig, jeweils ein Bereich im Vollbild
+       (bis 767px – ab 768px, also iPad Mini aufwärts, bleiben beide Spalten) --- */
+@media (max-width: 767px) {
+  .mobile-switch { display: flex; }
+
+  /* Leisten bleiben einzeilig und scrollen seitlich – Umbruch fräße die halbe Höhe */
+  .topbar { gap: 6px; padding: 6px 8px; row-gap: 6px; }
+  .brand { display: none; }                 /* Platz für die Bedienung */
+  .transport, .projectbar {
+    flex: 1 1 100%; flex-wrap: nowrap; gap: 6px;
+    overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  }
+  .transport::-webkit-scrollbar, .projectbar::-webkit-scrollbar,
+  .panel-head::-webkit-scrollbar { display: none; }
+  .transport { order: 1; }
+  .projectbar { order: 2; }
+  .transport > *, .projectbar > * { flex: none; }
+  .projectbar .p-btn { font-size: 12px; padding: 0 10px; }
+  .song-title { width: 104px; }
+  .vu { width: 44px; }
+  .field { font-size: 9px; }
+
+  /* Panel-Kopf ebenfalls einzeilig scrollend statt mehrzeilig */
+  .panel-head { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .panel-head > * { flex: none; }
+  .pattern-controls { flex-wrap: nowrap; }
+  .pattern-controls .pc-btn { padding: 0 10px; font-size: 12px; }
+
+  /* Nur der aktive Bereich ist sichtbar */
+  .layout { grid-template-columns: 1fr; padding: 6px; gap: 6px; }
+  .layout .side-panel { display: none; }
+  .layout.show-side .main-panel { display: none; }
+  .layout.show-side .side-panel { display: flex; }
+  .side-panel { min-height: 0; }
+
+  /* Kopfzeilen dürfen umbrechen */
+  .panel-head { gap: 6px; padding: 8px; }
+  .pattern-controls { gap: 5px; }
+  .tabs { flex-wrap: wrap; }
+  .tab { flex: 1 1 30%; font-size: 12px; }
+
+  /* Overlays im Vollbild */
+  .pr-panel, .tut-panel { width: 100vw; height: 100dvh; border-radius: 0; border: none; }
+  .pr-header, .tut-head { flex-wrap: wrap; gap: 8px; }
+  .tut-body { flex-direction: column; }
+  .tut-list { width: auto; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--line); }
+  .tut-item { min-width: 148px; }
+  .tut-lane { width: 74px; font-size: 10px; }
+  .tut-cell { width: 18px; height: 18px; }
+
+  /* Mixer: horizontal scrollbar statt Umbruch */
+  .mixer { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; }
+  .mix-ch { flex: none; }
+
+  .statusbar .hint { display: none; }
+  .tracker-help { font-size: 10px; padding: 6px 8px; }
+}
+
+/* --- iPhone quer: Höhe ist knapp – alles in eine Zeile, Beiwerk raus --- */
+@media (max-width: 900px) and (max-height: 460px) {
+  .topbar { padding: 4px 8px; row-gap: 4px; }
+  .transport, .projectbar { flex: 1 1 auto; }   /* nebeneinander statt untereinander */
+  .mobile-switch { padding: 4px 8px 0; }
+  .mobile-switch button { min-height: 0; padding: 6px; font-size: 12px; }
+  .topbar .p-btn, .topbar .t-btn { min-height: 36px; height: 36px; }
+  .keyboard { height: 128px; }
+  .tracker-help, .statusbar { display: none; }
+  .layout { padding: 4px; gap: 4px; }
+  .panel-head { padding: 5px 8px; }
 }

@@ -208,9 +208,29 @@ Playback-Scheduler und den Sample-Round-Trip geprüft.
 
 ---
 
+## 📱 iPhone & iPad
+
+Die App ist vollständig **touch-tauglich**:
+
+- **iPad** – zweispaltig wie am Rechner (Arbeitsfläche + Werkzeuge nebeneinander).
+- **iPhone** – einspaltig mit einem Umschalter **🎛️ Arbeitsfläche / 🎹 Werkzeuge**,
+  damit jeder Bereich den ganzen Bildschirm bekommt. Der Arranger wird beim Start
+  automatisch auf die Bildschirmbreite eingepasst.
+- **Fingerbedienung**: Blöcke setzen, ziehen und in der Länge ändern, Noten im
+  Piano-Roll zeichnen, Klaviatur und Drum-Pads spielen – alles per Touch.
+  **Doppeltipp** auf einen Block öffnet den Piano-Roll.
+- Bedienelemente in **44 pt** (Apple-Richtlinie), Eingabefelder in 16 px, damit
+  Safari beim Antippen nicht hineinzoomt.
+- **Safe-Area** für Notch/Dynamic Island und Home-Indicator, dynamische Höhe (`dvh`)
+  gegen die ein-/ausblendende Adressleiste, kein Gummiband-Scrollen beim Ziehen.
+- Der Ton wird nach App-Wechsel oder Bildschirmsperre **automatisch reaktiviert**.
+
+**Tipp:** In Safari über *Teilen → Zum Home-Bildschirm* installieren – dann startet
+Trance Maker im Vollbild ohne Browserleisten.
+
 ## Technik & Browser
 
 - Reines **HTML/CSS/JavaScript (ES-Module)**, keine Build-Tools, keine Laufzeit-Abhängigkeiten.
 - Benötigt einen modernen Browser mit **Web Audio API** und (für Aufnahme) **MediaRecorder**
-  (Chrome, Edge, Firefox, Safari).
+  (Chrome, Edge, Firefox, Safari – auch mobil auf iOS/iPadOS).
 - Lizenz: MIT.

@@ -44,11 +44,40 @@ export function setMasterVolume(v) {
   getMaster().gain.value = v;
 }
 
-/** Browser starten AudioContexts erst nach einer Nutzer-Geste. */
+let unlocked = false;
+
+/**
+ * Browser starten AudioContexts erst nach einer Nutzer-Geste.
+ * iOS/Safari braucht zusätzlich einen (stillen) Klang innerhalb der Geste,
+ * sonst bleibt der Context stumm, obwohl sein Zustand "running" meldet.
+ */
 export async function ensureRunning() {
   const c = getCtx();
   if (c.state === 'suspended') {
     try { await c.resume(); } catch (_) { /* ignore */ }
   }
+  if (!unlocked) {
+    try {
+      const src = c.createBufferSource();
+      src.buffer = c.createBuffer(1, 1, c.sampleRate);
+      src.connect(c.destination);
+      src.start(0);
+      unlocked = true;
+    } catch (_) { /* ignore */ }
+  }
   return c;
+}
+
+/**
+ * iOS pausiert den AudioContext beim App-/Tab-Wechsel und beim Sperren.
+ * Beim Zurückkommen wieder aufwecken, sonst bleibt alles stumm.
+ */
+export function watchLifecycle() {
+  const wake = () => {
+    const c = getCtx();
+    if (c.state === 'suspended') c.resume().catch(() => {});
+  };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+  window.addEventListener('focus', wake);
+  window.addEventListener('pageshow', wake);
 }

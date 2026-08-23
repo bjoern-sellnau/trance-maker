@@ -10,7 +10,7 @@ import { ArrangerUI } from './ui/arranger.js';
 import { KeyboardUI, DrumkitUI } from './ui/keyboard.js';
 import { PianoRollUI } from './ui/pianoroll.js';
 import { TutorialUI } from './ui/tutorial.js';
-import { getAnalyser, ensureRunning } from './audio/context.js';
+import { getAnalyser, ensureRunning, watchLifecycle } from './audio/context.js';
 import { saveProjectToFile, openProjectFromFile, exportSongWav, decodeAudioFile } from './project.js';
 import { buildDemo, DEMO_LIST } from './demos.js';
 
@@ -72,14 +72,17 @@ export class App {
     this.bindProjectButtons();
     this.bindTabs();
     this.bindViewSwitch();
+    this.bindMobileSwitch();
     this.bindFileDrop();
     this.sampleMaker.setMode('synth');
     this.renderAll();
     this.startVU();
 
-    // AudioContext bei erster Interaktion aufwecken
+    // AudioContext bei erster Interaktion aufwecken (iOS: auch touchend abdecken)
     const wake = () => ensureRunning();
     document.addEventListener('pointerdown', wake, { once: true });
+    document.addEventListener('touchend', wake, { once: true });
+    watchLifecycle();   // nach App-/Tab-Wechsel auf iOS wieder aufwecken
 
     // Globale Leertaste = Start/Stopp
     document.addEventListener('keydown', (e) => {
@@ -89,6 +92,8 @@ export class App {
     });
 
     this.applyView();
+    // Auf dem Handy ist der Arranger sonst breiter als der Bildschirm
+    if (this.isMobileLayout && this.viewMode === 'arranger') this.arranger.fit();
   }
 
   // ---------- Audio-Dateien per Drag & Drop importieren ----------
@@ -216,6 +221,7 @@ export class App {
       const project = buildDemo(id);
       this.loadProject(project);
       this.viewMode = 'arranger';
+      if (this.isMobileLayout) this.showPane('main');   // auf dem Handy den Song zeigen
       this.applyView();
       this.arranger.fit();
       this.setStatus('Demo geladen: ' + project.song.title + ' (' + project.song.arrangement.bars + ' Takte) — ganzer Song eingepasst');
@@ -256,6 +262,41 @@ export class App {
     if (name === 'mixer') this.renderMixer();
     if (name === 'keyboard' && this.keyboard) this.keyboard.render();
     if (name === 'drumkit' && this.drumkit) this.drumkit.render();
+  }
+
+  // ---------- Mobil: Arbeitsfläche / Werkzeuge ----------
+  bindMobileSwitch() {
+    const sw = $('#mobileSwitch');
+    if (!sw) return;
+    sw.querySelectorAll('button').forEach((b) => {
+      b.addEventListener('click', () => this.showPane(b.dataset.pane));
+    });
+    // Beim Drehen des Geräts Breiten neu berechnen (Arranger-Raster hängt daran)
+    window.addEventListener('resize', () => {
+      clearTimeout(this._resizeT);
+      this._resizeT = setTimeout(() => {
+        if (this.viewMode === 'arranger') this.arranger.render();
+        if (this.keyboard) this.keyboard.render();
+      }, 200);
+    });
+  }
+
+  /** Auf schmalen Geräten zwischen den beiden Spalten wechseln. */
+  showPane(pane) {
+    const layout = $('#layout');
+    const sw = $('#mobileSwitch');
+    if (!layout || !sw) return;
+    layout.classList.toggle('show-side', pane === 'side');
+    sw.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.pane === pane));
+    // Nach dem Einblenden neu zeichnen – versteckte Elemente haben Breite 0
+    if (pane === 'main') this.applyView();
+    else if (this.keyboard) this.keyboard.render();
+  }
+
+  /** true, wenn die einspaltige Handy-Ansicht aktiv ist. */
+  get isMobileLayout() {
+    const sw = $('#mobileSwitch');
+    return !!sw && getComputedStyle(sw).display !== 'none';
   }
 
   // ---------- Ansicht: Tracker / Arranger ----------
